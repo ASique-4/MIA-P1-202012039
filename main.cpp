@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <fstream>
 #include <iomanip> // Para setw
+
 #include "./Analizador/Analizador.h"
+
 #include "./Comandos/mkdisk/mkdisk.cpp"
+#include "./Comandos/rmdisk/rmdisk.cpp"
+
 using namespace std;
 
 int main()

@@ -1,4 +1,6 @@
 #include "Analizador.h"
+
+#include "../Comandos/rmdisk/rmdisk.h"
 #include "../Comandos/mkdisk/mkdisk.h"
 
 #include <iostream>
@@ -53,7 +55,7 @@ void analizar_mkdisk(char *parametros){
         } else if (tipo == "fit"){
             disco->fit = valor;
         } else {
-            cout << "Parametro no aceptado en 'mkdisk': " << valor << endl;
+            cout << "!Error! mkdisk solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
         }
         parametros = strtok(NULL, ">");
     }
@@ -66,12 +68,43 @@ void analizar_mkdisk(char *parametros){
     disco->make_mkdisk(disco);
 }
 
+/*Funcion para analizar el comando de rmdisk*/
+void analizar_rmdisk(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    rmdisk *disco = new rmdisk();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "path"){
+            disco->path = valor;
+        } else {
+            cout << "!Error! rmdisk solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (disco->path == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'rmdisk'" << endl;
+        return;
+    }
+    //Creamos el disco
+    disco->make_rmdisk(disco);
+}
+
 void Analizar(char* comando)
 {
     char* token = strtok(comando, " ");
     if(strcasecmp(token, "mkdisk") == 0){
         cout << "mkdisk" << endl;
         analizar_mkdisk(token);
+    }else if(strcasecmp(token, "rmdisk") == 0){
+        cout << "rmdisk" << endl;
+        analizar_rmdisk(token);
     }else{
         cout << "¡Error! No puedo hacer eso, ¡soy un programa, no un mago!" << endl;
     }

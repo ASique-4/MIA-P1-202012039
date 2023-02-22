@@ -32,10 +32,7 @@ void mkdisk::make_mkdisk(mkdisk *disco){
 
 
     //Verificamos si el path existe y si no lo creamos
-    if(access(path.c_str(), F_OK) != -1){
-        cout << "El path existe" << endl;
-    } else {
-        cout << "El path no existe" << endl;
+    if(access(path.c_str(), F_OK) == -1){
         string comando = "mkdir -p " + path;
         system(comando.c_str());
     }
@@ -46,7 +43,7 @@ void mkdisk::make_mkdisk(mkdisk *disco){
 
     //Verificamos si el archivo se creo correctamente
     if(archivo == NULL){
-        cout << "Error al crear el archivo" << endl;
+        cout << "!Error¡ Fallé al crear el archivo. Lo siento, parece que no soy tan hábil como pensaba." << endl;
         return;
     }
     //Llenamos el archivo con 0
