@@ -11,7 +11,8 @@ class mkdisk
         mkdisk();
         int size = 0;
         string path = "";
-        string name = "";
+        string unit = "";
+        string fit = "";
 
         void make_mkdisk(mkdisk *disco);
     private:

@@ -1,0 +1,1 @@
+cd "/home/angel/Documents/Archivos/Proyecto1/" && g++ main.cpp -o main && "/home/angel/Documents/Archivos/Proyecto1/"main

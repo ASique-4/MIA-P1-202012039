@@ -26,7 +26,7 @@ string get_valor_parametro(string parametro){
             char caracter = parametro.at(i);
             valor = valor + caracter;
         }
-        if(parametro.at(i) == '>') concatenar = true;
+        if(parametro.at(i) == '=') concatenar = true;
     }
     //devolvemos el string
     return valor;
@@ -35,7 +35,7 @@ string get_valor_parametro(string parametro){
 /*Funcion para analizar el comando de mkdisk*/
 void analizar_mkdisk(char *parametros){
     //Pasamos a la siguiente posicion
-    parametros = strtok(NULL, " ");
+    parametros = strtok(NULL, ">");
     //Inicializamos nuestro disco
     mkdisk *disco = new mkdisk();
     while(parametros != NULL){
@@ -44,16 +44,23 @@ void analizar_mkdisk(char *parametros){
         string tipo = get_tipo_parametro(tmpParam);
         string valor = get_valor_parametro(tmpParam);
         //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
-        if(tipo == "$size"){
+        if(tipo == "size"){
             disco->size = stoi(valor);
-        } else if (tipo == "$path"){
+        } else if (tipo == "path"){
             disco->path = valor;
-        } else if (tipo == "$name"){
-            disco->name = valor;
+        } else if (tipo == "unit"){
+            disco->unit = valor.erase(valor.find_first_not_of(" ") + 1);
+        } else if (tipo == "fit"){
+            disco->fit = valor;
         } else {
             cout << "Parametro no aceptado en 'mkdisk': " << valor << endl;
         }
-        parametros = strtok(NULL, " ");
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (disco->size <= 0 || disco->path == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'mkdisk'" << endl;
+        return;
     }
     //Creamos el disco
     disco->make_mkdisk(disco);
