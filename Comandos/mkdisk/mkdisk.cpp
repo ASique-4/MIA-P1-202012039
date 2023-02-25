@@ -43,31 +43,35 @@ void mkdisk::make_mkdisk(mkdisk *disco){
 
     //Verificamos si el archivo se creo correctamente
     if(archivo == NULL){
-        cout << "!Error¡ Fallé al crear el archivo. Lo siento, parece que no soy tan hábil como pensaba." << endl;
+        cout << "¡Error Fallé al crear el archivo. Lo siento, parece que no soy tan hábil como pensaba." << endl;
         return;
     }
     //Llenamos el archivo con 0
     int tamanio = disco->size;
 
-    if(disco->unit == "K"){
-        tamanio = disco->size;
-    } else if (disco->unit == "M"){
-        tamanio = disco->size * 1024 * 1024;
-    } else if (disco->unit == ""){
-        tamanio = disco->size * 1024 * 1024;
-    } else {
-        cout << "Error en el parametro 'unit'" << endl;
-        return;
+    //Verificamos si el tamaño es en KB
+    if(disco->unit == 'K'){
+        tamanio = tamanio * 1024;
+    }else if(disco->unit == 'M'){
+        tamanio = tamanio * 1024 * 1024;
+    }else{
+        tamanio = tamanio * 1024 * 1024;
     }
 
+    //Creamos el mbr
+    disco->mbr.mbr_tamano = tamanio;
+    disco->mbr.mbr_fecha_creacion = time(0);
+    disco->mbr.mbr_disk_signature = rand() % 1000;
+    disco->mbr.mbr_disk_fit = disco->fit;
 
-    for(int i = 0; i < tamanio; i++){
-        fwrite("0", sizeof(char), 1, archivo);
+    //Escribimos el mbr
+    fwrite(&disco->mbr, sizeof(mbr), 1, archivo);
+    //Llenamos el archivo con 0
+    char c = 0;
+    for(int i = 0; i < tamanio - sizeof(mbr); i++){
+        fwrite(&c, sizeof(char), 1, archivo);
     }
-
-    //Guardamos el disco en el archivo
-    fwrite(&disco, sizeof(mkdisk), 1, archivo);
     fclose(archivo);
-    
+    cout << "¡Presto! Disco creado correctamente. " << endl;
 
 }

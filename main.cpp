@@ -6,6 +6,7 @@
 
 #include "./Comandos/mkdisk/mkdisk.cpp"
 #include "./Comandos/rmdisk/rmdisk.cpp"
+#include "./Comandos/fdisk/fdisk.cpp"
 
 using namespace std;
 

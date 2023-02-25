@@ -3,7 +3,6 @@
 #include <string.h>
 #include <ctime>
 #include <unistd.h>
-#include <iostream>
 
 rmdisk::rmdisk(){}
 
@@ -16,7 +15,7 @@ void rmdisk::make_rmdisk(rmdisk *disco){
         string comando = "rm " + disco->path;
         system(comando.c_str());
     }catch(exception e){
-        cout << "!Error¡ No se pudo eliminar el archivo. Quizás se haya ido a pescar con su familia" << endl;
+        cout << "¡Error No se pudo eliminar el archivo. Quizás se haya ido a pescar con su familia" << endl;
         return;
     }
 }
