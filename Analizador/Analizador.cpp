@@ -52,7 +52,7 @@ void analizar_mkdisk(char *parametros){
         if(tipo == "size"){
             disco->size = stoi(valor);
         } else if (tipo == "path"){
-            disco->path = valor;
+            disco->path = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
         } else if (tipo == "unit"){
             disco->unit = valor[0];
         } else if (tipo == "fit"){
@@ -84,7 +84,7 @@ void analizar_rmdisk(char *parametros){
         string valor = get_valor_parametro(tmpParam);
         //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
         if(tipo == "path"){
-            disco->path = valor;
+            disco->path = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
         } else {
             cout << "¡Error! rmdisk solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
         }
@@ -114,7 +114,7 @@ void analizar_fdisk(char *parametros){
         if(tipo == "size"){
             particion->size = stoi(valor);
         } else if (tipo == "path"){
-            particion->path = valor;
+            particion->path = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
         } else if (tipo == "unit"){
             particion->unit = valor[0];
         } else if (tipo == "fit"){

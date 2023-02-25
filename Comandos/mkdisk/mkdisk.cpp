@@ -11,6 +11,8 @@
 
 mkdisk::mkdisk(){}
 
+MBR::MBR(){}
+
 void mkdisk::make_mkdisk(mkdisk *disco){
     //instrucciones del "mkdisk"
     cout << "path: " << disco->path << endl;
@@ -63,12 +65,13 @@ void mkdisk::make_mkdisk(mkdisk *disco){
     disco->mbr.mbr_fecha_creacion = time(0);
     disco->mbr.mbr_disk_signature = rand() % 1000;
     disco->mbr.mbr_disk_fit = disco->fit;
+    
 
     //Escribimos el mbr
-    fwrite(&disco->mbr, sizeof(mbr), 1, archivo);
+    fwrite(&disco->mbr, sizeof(MBR), 1, archivo);
     //Llenamos el archivo con 0
     char c = 0;
-    for(int i = 0; i < tamanio - sizeof(mbr); i++){
+    for(int i = 0; i < tamanio - sizeof(MBR); i++){
         fwrite(&c, sizeof(char), 1, archivo);
     }
     fclose(archivo);
