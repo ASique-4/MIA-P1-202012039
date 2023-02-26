@@ -18,13 +18,13 @@ int main()
     string mensaje = "Ingrese el comando a analizar";
 
     int ancho = 40;
-    cout << setfill('=') << setw(ancho) << "" << endl;
-    cout << setfill(' ') << setw((ancho - titulo.length()) / 2 + titulo.length()) << titulo << endl;
-    cout << setfill('=') << setw(ancho) << "" << endl;
-    cout << setfill(' ') << setw((ancho - nombre.length()) / 2 + nombre.length()) << nombre << endl;
-    cout << setfill('=') << setw(ancho) << "" << endl;
-    cout << setfill(' ') << setw((ancho - codigo.length()) / 2 + codigo.length()) << codigo << endl;
-    cout << setfill('=') << setw(ancho) << "" << endl;
+    cout << "+" << setfill('-') << setw(ancho-2) << "+" << endl;
+    cout << "|" << setfill(' ') << setw(ancho-2) << "|" << endl;
+    cout << "|" << setfill(' ') << setw((ancho - titulo.length()) / 2 + titulo.length()-1) << titulo << setw(((ancho - titulo.length()) / 2) - 1) << "|" << endl;
+    cout << "|" << setfill(' ') << setw((ancho - nombre.length()) / 2 + nombre.length()-1) << nombre << setw(((ancho - nombre.length()) / 2) - 1) << "|" << endl;
+    cout << "|" << setfill(' ') << setw((ancho - codigo.length()) / 2 + codigo.length()-1) << codigo << setw(((ancho - codigo.length()) / 2)) << "|" << endl;
+    cout << "|" << setfill(' ') << setw(ancho-2) << "|" << endl;
+    cout << "+" << setfill('-') << setw(ancho-2) << "+" << endl;
     cout << endl;
 
     cout << mensaje << endl;
@@ -33,7 +33,7 @@ int main()
   bool repetir = true;
   do{
     //Pedimos el comando
-    cout<< "> ";
+    cout<< "~ ";
     scanf(" %[^\n]",comando);
     //Ahora analizamos
     Analizar(comando);

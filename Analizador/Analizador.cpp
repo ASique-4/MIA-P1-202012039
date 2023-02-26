@@ -167,7 +167,7 @@ void analizar_fdisk(char *parametros){
         parametros = strtok(NULL, ">");
     }
     //Verificamos que los parametros obligatorios esten
-    if (particion->size <= 0 || particion->path == "" || particion->name == ""){
+    if (particion->path == "" || particion->name == ""){
         cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'fdisk'" << endl;
         return;
     }

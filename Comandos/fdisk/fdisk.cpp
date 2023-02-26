@@ -87,6 +87,136 @@ void mejor_ajuste(fdisk *particion_comando, Partition particion){
     fclose(archivo);
 }
 
+/**
+ * Encuentra el mayor espacio libre en el disco y le asigna la partición
+ * 
+ * @param particion_comando La estructura fdisk que contiene la ruta al disco y el nombre de la
+ * partición.
+ * @param particion La partición a crear.
+ * 
+ */
+void peor_ajuste(fdisk *particion_comando, Partition particion){
+
+    // Abrimos el mbr
+    FILE *archivo;
+    archivo = fopen(particion_comando->path.c_str(), "rb+");
+    if (archivo == NULL)
+    {
+        cout << "¡Error! No se ha encontrado el archivo. Quizás se haya ido a pescar con su familia" << endl;
+        return;
+    }
+    // Leemos el mbr
+    MBR mbr;
+    fseek(archivo, 0, SEEK_SET);
+    fread(&mbr, sizeof(MBR), 1, archivo);
+
+    // Guardamos el tamaño de la nueva partición
+    int tamano = particion.part_size;
+    // Guardamos los espacios libres en un array de estructuras
+    struct EspacioLibre {
+        int size;
+        Partition* partition;
+    };
+    EspacioLibre espacios_libres[4] = {
+        {mbr.mbr_partition_1.part_size, &mbr.mbr_partition_1},
+        {mbr.mbr_partition_2.part_size, &mbr.mbr_partition_2},
+        {mbr.mbr_partition_3.part_size, &mbr.mbr_partition_3},
+        {mbr.mbr_partition_4.part_size, &mbr.mbr_partition_4}
+    };
+    for (int i = 0; i < 4; i++){
+        if (espacios_libres[i].partition->part_name[0] != '\0'){
+            espacios_libres[i].size = -1;
+        }
+    }
+
+    // Buscamos el espacio libre más grande
+    int peor_ajuste = -1;
+    for (int i = 0; i < 4; i++){
+        if (espacios_libres[i].size >= tamano && espacios_libres[i].size != -1){
+            if (peor_ajuste == -1){
+                peor_ajuste = espacios_libres[i].size;
+            } else if (espacios_libres[i].size > peor_ajuste){
+                peor_ajuste = espacios_libres[i].size;
+            }
+        }
+    }
+
+    // Si encontramos el mejor ajuste, asignamos la partición
+    for (int i = 0; i < 4; i++){
+        if (espacios_libres[i].size == peor_ajuste && espacios_libres[i].partition->part_name[0] == '\0'){
+            *(espacios_libres[i].partition) = particion;
+            fseek(archivo, 0, SEEK_SET);
+            fwrite(&mbr, sizeof(MBR), 1, archivo);
+            fclose(archivo);
+            cout << "¡Partición creada con éxito!" << endl;
+            return;
+        }
+    }
+
+    // Si no encontramos un espacio libre adecuado, mostramos un mensaje de error
+    cout << "¡Error! El disco está tan lleno que las particiones están empezando a pelearse entre sí. No podemos crear otra." << endl;
+    fclose(archivo);
+}
+
+
+/**
+ * Encuentra el primer espacio libre en el disco y le asigna la partición
+ * 
+ * @param particion_comando La estructura fdisk que contiene la ruta al disco y el nombre de la
+ * partición.
+ * @param particion La partición a crear.
+ * 
+ */
+void primer_ajuste(fdisk *particion_comando, Partition particion){
+
+    // Abrimos el mbr
+    FILE *archivo;
+    archivo = fopen(particion_comando->path.c_str(), "rb+");
+    if (archivo == NULL)
+    {
+        cout << "¡Error! No se ha encontrado el archivo. Quizás se haya ido a pescar con su familia" << endl;
+        return;
+    }
+    // Leemos el mbr
+    MBR mbr;
+    fseek(archivo, 0, SEEK_SET);
+    fread(&mbr, sizeof(MBR), 1, archivo);
+
+    // Guardamos el tamaño de la nueva partición
+    int tamano = particion.part_size;
+    // Guardamos los espacios libres en un array de estructuras
+    struct EspacioLibre {
+        int size;
+        Partition* partition;
+    };
+    EspacioLibre espacios_libres[4] = {
+        {mbr.mbr_partition_1.part_size, &mbr.mbr_partition_1},
+        {mbr.mbr_partition_2.part_size, &mbr.mbr_partition_2},
+        {mbr.mbr_partition_3.part_size, &mbr.mbr_partition_3},
+        {mbr.mbr_partition_4.part_size, &mbr.mbr_partition_4}
+    };
+    for (int i = 0; i < 4; i++){
+        if (espacios_libres[i].partition->part_name[0] != '\0'){
+            espacios_libres[i].size = -1;
+        }
+    }
+
+    // Buscamos el primer espacio libre
+    for (int i = 0; i < 4; i++){
+        if (espacios_libres[i].size >= tamano && espacios_libres[i].size != -1){
+            *(espacios_libres[i].partition) = particion;
+            fseek(archivo, 0, SEEK_SET);
+            fwrite(&mbr, sizeof(MBR), 1, archivo);
+            fclose(archivo);
+            cout << "¡Partición creada con éxito!" << endl;
+            return;
+        }
+    }
+
+    // Si no encontramos un espacio libre adecuado, mostramos un mensaje de error
+    cout << "¡Error! El disco está tan lleno que las particiones están empezando a pelearse entre sí. No podemos crear otra." << endl;
+    fclose(archivo);    
+}
     
 
 
