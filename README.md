@@ -1,1 +1,3 @@
 # MIA-P1-202012039
+
+Este proyecto se enfoca en el desarrollo de una aplicación de comandos en consola, que permitirá a los usuarios realizar diversas tareas relacionadas con la administración de archivos, como el formateo de particiones, la creación de aplicaciones de comandos, la aplicación de la teoría de ajustes y particiones, la generación de reportes en Graphviz y la restricción y administración del acceso a los archivos y carpetas en ext3/ext2 por medio de usuarios.

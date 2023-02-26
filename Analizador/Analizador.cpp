@@ -20,7 +20,7 @@ string get_tipo_parametro(string parametro){
         tipo = tipo + caracter;
     }
     //devolvemos el string
-    return tipo;
+    return tipo.erase(tipo.find_last_not_of(" \t\r\n") + 1);
 }
 string get_valor_parametro(string parametro){
     //Iteramos hasta obtener el tipo del parametro
@@ -34,7 +34,7 @@ string get_valor_parametro(string parametro){
         if(parametro.at(i) == '=') concatenar = true;
     }
     //devolvemos el string
-    return valor;
+    return valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
 }
 
 /*Funcion para analizar el comando de mkdisk*/
