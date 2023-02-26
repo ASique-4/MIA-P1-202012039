@@ -6,6 +6,13 @@
 
 rmdisk::rmdisk(){}
 
+/**
+ * Elimina un archivo.
+ * 
+ * @param disco Este es el objeto que contiene la información del disco a eliminar.
+ * 
+ * @return Nada
+ */
 void rmdisk::make_rmdisk(rmdisk *disco){
     //instrucciones del "rmdisk"
     cout << "path: " << disco->path << endl;

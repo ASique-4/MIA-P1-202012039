@@ -1,3 +1,6 @@
+/**
+ * It creates a partition
+ */
 #include "fdisk.h"
 #include "../mkdisk/mkdisk.h"
 #include <iostream>
@@ -12,7 +15,14 @@ void agregar_espacio(fdisk *particion_comando){
     
 }
 
-// Mejor ajuste
+
+/**
+ * Toma un comando y una partición, e intenta encontrar la mejor opción para la partición en el disco.
+ * 
+ * @param particion_comando La estructura fdisk que contiene la ruta al disco y el nombre de la
+ * partición.
+ * @param particion La partición que se agregará al disco.
+ */
 void mejor_ajuste(fdisk *particion_comando, Partition particion){
 
     // Abrimos el mbr
@@ -60,7 +70,6 @@ void mejor_ajuste(fdisk *particion_comando, Partition particion){
     }
 
     // Si encontramos el mejor ajuste, asignamos la partición
-    
     for (int i = 0; i < 4; i++){
         if (espacios_libres[i].size == mejor_ajuste && espacios_libres[i].partition->part_name[0] == '\0'){
             *(espacios_libres[i].partition) = particion;
@@ -82,6 +91,13 @@ void mejor_ajuste(fdisk *particion_comando, Partition particion){
 
 
 // Función para crear una partición
+/**
+ * It creates a partition
+ * 
+ * @param particion The partition to be created.
+ * @param particion_comando The command that the user entered.
+ * 
+ */
 void crear_particion(Partition particion, fdisk *particion_comando){
     FILE *archivo;
     archivo = fopen(particion_comando->path.c_str(), "rb+");
@@ -140,7 +156,7 @@ void crear_particion(Partition particion, fdisk *particion_comando){
 }
 
 
-// Función para confirmar la eliminación de una partición
+
 bool confirmar_eliminación(){
     char respuesta;
     cout << "Eliminar esta partición no tendrá marcha atrás. ¿Estás preparado? (s/n): ";
@@ -148,7 +164,12 @@ bool confirmar_eliminación(){
     return (respuesta == 's' || respuesta == 'S');
 }
 
-// Función para eliminar una partición
+
+/**
+ * Elimina la partición.
+ * 
+ * @param partition La partición a eliminar.
+ */
 void delete_partition(fdisk *partition){
     // Abrimos el mbr
     FILE *archivo;
@@ -178,6 +199,13 @@ void delete_partition(fdisk *partition){
     fclose(archivo);
 }
 
+
+/**
+ * Es el main del fdisk donde se analiza el comando ingresado por el usuario.
+ * 
+ * @param partition_comando Este es el objeto que contiene todos los parámetros que el usuario ingresó
+ * en la línea de comando.
+ */
 void fdisk::make_fdisk(fdisk *partition_comando)
 {
     // instrucciones del "fdisk"

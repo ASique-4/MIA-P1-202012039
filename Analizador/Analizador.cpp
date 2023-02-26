@@ -11,6 +11,13 @@
 using namespace std;
 
 /*Funciones que devuelven el tipo y el valor de un parametro en strings ya en lowercase */
+/**
+ * Toma una cadena y devuelve el tipo del parámetro.
+ * 
+ * @param parametro El parámetro a analizar.
+ * 
+ * @return El tipo de parámetro
+ */
 string get_tipo_parametro(string parametro){
     //Iteramos hasta obtener el tipo del parametro
     string tipo = "";
@@ -22,6 +29,13 @@ string get_tipo_parametro(string parametro){
     //devolvemos el string
     return tipo.erase(tipo.find_last_not_of(" \t\r\n") + 1);
 }
+/**
+ * Toma una cadena y devuelve el valor del parámetro.
+ * 
+ * @param parametro El parámetro a analizar.
+ * 
+ * @return El valor del parámetro.
+ */
 string get_valor_parametro(string parametro){
     //Iteramos hasta obtener el tipo del parametro
     string valor = "";
@@ -37,7 +51,14 @@ string get_valor_parametro(string parametro){
     return valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
 }
 
-/*Funcion para analizar el comando de mkdisk*/
+
+/**
+ * Toma una cadena, la divide en tokens y luego asigna los tokens a las variables apropiadas
+ * 
+ * @param parametros La cadena que contiene los parámetros del comando.
+ * 
+ * @return Un puntero a un objeto mkdisk
+ */
 void analizar_mkdisk(char *parametros){
     //Pasamos a la siguiente posicion
     parametros = strtok(NULL, ">");
@@ -71,7 +92,13 @@ void analizar_mkdisk(char *parametros){
     disco->make_mkdisk(disco);
 }
 
-/*Funcion para analizar el comando de rmdisk*/
+/**
+ * Toma una cadena, la divide en tokens y luego usa esos tokens para crear un nuevo objeto rmdisk
+ * 
+ * @param parametros La cadena que contiene los parámetros.
+ * 
+ * @return un puntero a un char.
+ */
 void analizar_rmdisk(char *parametros){
     //Pasamos a la siguiente posicion
     parametros = strtok(NULL, ">");
@@ -99,7 +126,14 @@ void analizar_rmdisk(char *parametros){
     disco->make_rmdisk(disco);
 }
 
-/*Funcion para analizar el comando de fdisk*/
+
+/**
+ * Toma los parámetros del comando y crea un nuevo objeto fdisk con ellos.
+ * 
+ * @param parametros Los parámetros que el usuario ingresó.
+ * 
+ * @return un puntero a un objeto fdisk.
+ */
 void analizar_fdisk(char *parametros){
     //Pasamos a la siguiente posicion
     parametros = strtok(NULL, ">");
@@ -141,6 +175,11 @@ void analizar_fdisk(char *parametros){
     particion->make_fdisk(particion);
 }
 
+/**
+ * Toma una cadena, la divide en tokens y luego llama a la función apropiada para manejar el comando
+ * 
+ * @param comando El comando que el usuario ingresó.
+ */
 void Analizar(char* comando)
 {
     char* token = strtok(comando, " ");
