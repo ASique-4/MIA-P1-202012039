@@ -16,7 +16,7 @@ class fdisk
         char type;
         char fit;
         string delete_ = "";
-        int add;
+        int add = 0;
         void make_fdisk(fdisk *disco);
     private:
 };
