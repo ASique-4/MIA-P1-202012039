@@ -11,10 +11,10 @@ class fdisk
         fdisk();
         int size = 0;
         string path = "";
-        char name[16];
-        char unit;
-        char type;
-        char fit;
+        char name[16] = "\0";
+        char unit = 'k';
+        char type = 'p';
+        char fit = 'w';
         string delete_ = "";
         int add = 0;
         void make_fdisk(fdisk *disco);

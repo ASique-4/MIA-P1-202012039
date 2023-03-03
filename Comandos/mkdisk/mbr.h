@@ -24,12 +24,19 @@ class MBR
 
         Partition getPartition(int index);
         Partition* findPartition(char name[16]);
+        void OrdenarParticiones();
 
     private:
 };
 
 #endif // MBR_H
 
+/*
+*
+* Una función que busca una partición por su id.
+* @return La partición.
+*
+*/
 Partition MBR::getPartition(int index){
     switch(index){
         case 1:
@@ -45,6 +52,12 @@ Partition MBR::getPartition(int index){
     }
 }
 
+/*
+*
+* Una función que busca una partición por su nombre.
+* @return La partición si la encuentra, NULL si no la encuentra.
+*
+*/
 Partition* MBR::findPartition(char name[16]){
     if (strcmp(mbr_partition_1.part_name, name) == 0){
         return &mbr_partition_1;
@@ -56,5 +69,28 @@ Partition* MBR::findPartition(char name[16]){
         return &mbr_partition_4;
     } else {
         return NULL;
+    }
+}
+
+/*  
+*
+*   Ordena las particiones por su posición de inicio
+*   de menor a mayor
+*
+*/
+void MBR::OrdenarParticiones(){
+    Partition aux;
+    try {
+        for (int i = 0; i < 4; i++){
+            for (int j = 0; j < 4; j++){
+                if (getPartition(i).part_start < getPartition(j).part_start){
+                    aux = getPartition(i);
+                    getPartition(i) = getPartition(j);
+                    getPartition(j) = aux;
+                }
+            }
+        }
+    } catch (exception e){
+        return;
     }
 }

@@ -192,6 +192,9 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "fdisk") == 0){
         cout << "fdisk" << endl;
         analizar_fdisk(token);
+    }else if(strcasecmp(token, "exit") == 0){
+        cout << "exit" << endl;
+        exit(0);
     }else{
         cout << "¡Error! No puedo hacer eso, ¡soy un programa, no un mago!" << endl;
     }
