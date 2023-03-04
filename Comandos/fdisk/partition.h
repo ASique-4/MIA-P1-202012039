@@ -16,6 +16,7 @@ class Partition
         int part_start = -1;
         int part_size = -1;
         char part_name[16];
+        
 
     private:
 };

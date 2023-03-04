@@ -68,7 +68,7 @@ Partition* MBR::findPartition(char name[16]){
     } else if (strcmp(mbr_partition_4.part_name, name) == 0){
         return &mbr_partition_4;
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
