@@ -22,6 +22,35 @@ struct EspacioLibre
 };
 
 /**
+ * Comprueba si hay un EBR con el mismo nombre que el que estamos intentando crear
+ * 
+ * @param nombreParticion El nombre de la partición que se va a buscar.
+ * @param archivo El puntero del archivo al disco.
+ * 
+ * @return un valor booleano.
+ */
+bool existeEBRConMismoNombre(char* nombreParticion, FILE* archivo) {
+    MBR mbr;
+    EBR ebr;
+    int lastEBR = sizeof(MBR);
+    fseek(archivo, 0, SEEK_SET);
+    fread(&mbr, sizeof(MBR), 1, archivo);
+    while (lastEBR < mbr.mbr_tamano) {
+        fseek(archivo, lastEBR, SEEK_SET);
+        fread(&ebr, sizeof(EBR), 1, archivo);
+        if (strcmp(ebr.part_name, nombreParticion) == 0) {
+            return true;
+        }
+        if (ebr.part_next == -1) {
+            break;
+        }
+        lastEBR = ebr.part_next;
+    }
+    return false;
+}
+
+
+/**
  * Devuelve un puntero a la primera partición en el MBR que está vacía
  *
  * @param mbr El MBR del disco.
@@ -39,9 +68,12 @@ Partition* buscarParticionLibre(MBR& mbr, int size) {
             break;
         }
     }
-
     if (particionLibre == nullptr) {
         for (int i = 3; i >= 0; i--) {
+            if (particiones[i]->part_size == -1 && particiones[i]->part_start == -1 && i == 0) {
+                particionLibre = particiones[i];
+                break;
+            }
             if (particiones[i]->part_size == -1 && particiones[i]->part_start == -1 
                 && (particiones[i - 1]->part_size + particiones[i - 1]->part_start) == (mbr.mbr_tamano - size) ) {
                 particionLibre = particiones[i];
@@ -110,7 +142,7 @@ vector<EspacioLibre> calcularEspaciosLibres(MBR mbr)
     mbr.OrdenarParticiones();
 
     // Iteramos sobre las particiones para encontrar los espacios libres
-    int last_end = sizeof(MBR);
+    int last_end = 0;
     bool any_partition_used = false; // Variable para verificar si se ha ocupado alguna partición
 
     for (int i = 0; i < 4; i++)
@@ -143,6 +175,12 @@ vector<EspacioLibre> calcularEspaciosLibres(MBR mbr)
             last_end = particiones[i]->part_start + particiones[i]->part_size;
             any_partition_used = true;
         }
+    }
+
+    if (espacios_libres.size() == 0)
+    {
+        // Agregamos un espacio libre que abarque todo el disco
+        espacios_libres.push_back({last_end, mbr.mbr_tamano - last_end, nullptr});
     }
 
 
@@ -445,7 +483,7 @@ void mejor_ajuste(fdisk *particion_comando, Partition particion)
             particionLibre->part_fit = particion.part_fit;
             strcpy(particionLibre->part_name, particion.part_name);
             particionLibre->part_start = getStart(particion.part_name, mbr);
-        } else if (particion.part_type == 'L')
+        } else if (particion.part_type == 'L' || particion.part_type == 'l')
         {
             Partition *particionExtendida = buscarParticionExtendida(mbr);
             // Para las particiones lógicas
@@ -455,28 +493,48 @@ void mejor_ajuste(fdisk *particion_comando, Partition particion)
                 // Buscar el último ebr
                 int start = particionExtendida->part_start;
                 int size = particionExtendida->part_size;
-                int end = start + size;
-                int lastEBR = start;
+                int end = mbr.mbr_tamano;
+                int lastEBR = sizeof(MBR);
                 while (lastEBR < end)
                 {
                     fseek(archivo, lastEBR, SEEK_SET);
                     fread(&ebr, sizeof(EBR), 1, archivo);
-                    if (ebr.part_next == -1)
+                    if (ebr.part_next == -1 || ebr.part_size == 0)
                     {
+                        lastEBR += sizeof(EBR);
                         break;
                     }
-                    lastEBR = ebr.part_next + ebr.part_size;
+                    lastEBR += sizeof(EBR);
+                }
+                // Verificamos que no se repita el nombre 
+                if (existeEBRConMismoNombre(particion.part_name, archivo))
+                {
+                    cout << "¡Error! Ya existe una partición con el mismo nombre." << endl;
+                    fclose(archivo);
+                    return;
+                }
+                // Actualizamos el next del ebr anterior
+                if (lastEBR != sizeof(MBR))
+                {
+                    fseek(archivo, lastEBR - sizeof(EBR), SEEK_SET);
+                    fread(&ebr, sizeof(EBR), 1, archivo);
+                    ebr.part_next = lastEBR;
+                    fseek(archivo, lastEBR - sizeof(EBR), SEEK_SET);
+                    fwrite(&ebr, sizeof(EBR), 1, archivo);
                 }
                 // Crear el ebr
                 ebr.part_status = '0';
                 ebr.part_fit = particion.part_fit;
-                ebr.part_start = lastEBR + sizeof(EBR);
+                ebr.part_start = lastEBR;
                 ebr.part_size = tamano;
                 strcpy(ebr.part_name, particion.part_name);
                 ebr.part_next = -1;
                 // Guardar el ebr
                 fseek(archivo, lastEBR, SEEK_SET);
-                fwrite(&ebr, sizeof(EBR), 1, archivo);
+                fwrite(&ebr, sizeof(MBR), 1, archivo);
+                // Leer el ebr
+                fseek(archivo, lastEBR, SEEK_SET);
+                fread(&ebr, sizeof(EBR), 1, archivo);
             }
             else
             {
@@ -618,28 +676,48 @@ void peor_ajuste(fdisk *particion_comando, Partition particion)
                 // Buscar el último ebr
                 int start = particionExtendida->part_start;
                 int size = particionExtendida->part_size;
-                int end = start + size;
-                int lastEBR = start;
+                int end = mbr.mbr_tamano;
+                int lastEBR = sizeof(MBR);
                 while (lastEBR < end)
                 {
                     fseek(archivo, lastEBR, SEEK_SET);
                     fread(&ebr, sizeof(EBR), 1, archivo);
-                    if (ebr.part_next == -1)
+                    if (ebr.part_next == -1 || ebr.part_size == 0)
                     {
+                        lastEBR += sizeof(EBR);
                         break;
                     }
-                    lastEBR = ebr.part_next + ebr.part_size;
+                    lastEBR += sizeof(EBR);
+                }
+                // Verificamos que no se repita el nombre 
+                if (existeEBRConMismoNombre(particion.part_name, archivo))
+                {
+                    cout << "¡Error! Ya existe una partición con el mismo nombre." << endl;
+                    fclose(archivo);
+                    return;
+                }
+                // Actualizamos el next del ebr anterior
+                if (lastEBR != sizeof(MBR))
+                {
+                    fseek(archivo, lastEBR - sizeof(EBR), SEEK_SET);
+                    fread(&ebr, sizeof(EBR), 1, archivo);
+                    ebr.part_next = lastEBR;
+                    fseek(archivo, lastEBR - sizeof(EBR), SEEK_SET);
+                    fwrite(&ebr, sizeof(EBR), 1, archivo);
                 }
                 // Crear el ebr
                 ebr.part_status = '0';
                 ebr.part_fit = particion.part_fit;
-                ebr.part_start = lastEBR + sizeof(EBR);
+                ebr.part_start = lastEBR;
                 ebr.part_size = tamano;
                 strcpy(ebr.part_name, particion.part_name);
                 ebr.part_next = -1;
                 // Guardar el ebr
                 fseek(archivo, lastEBR, SEEK_SET);
-                fwrite(&ebr, sizeof(EBR), 1, archivo);
+                fwrite(&ebr, sizeof(MBR), 1, archivo);
+                // Leer el ebr
+                fseek(archivo, lastEBR, SEEK_SET);
+                fread(&ebr, sizeof(EBR), 1, archivo);
             }
             else
             {
@@ -747,37 +825,56 @@ void primer_ajuste(fdisk *particion_comando, Partition particion)
 
         } else if (particion.part_type == 'L')
         {
-            // Para las particiones lógicas
-            // Buscamos una partición extendida
             Partition *particionExtendida = buscarParticionExtendida(mbr);
+            // Para las particiones lógicas
             if (particionExtendida != nullptr)
             {
-                // Leemos el ebr
                 EBR ebr;
-                fseek(archivo, particionExtendida->part_start, SEEK_SET);
-                fread(&ebr, sizeof(EBR), 1, archivo);
-                // Buscamos el último ebr
-                int lastEBR = particionExtendida->part_start;
-                while (true)
+                // Buscar el último ebr
+                int start = particionExtendida->part_start;
+                int size = particionExtendida->part_size;
+                int end = mbr.mbr_tamano;
+                int lastEBR = sizeof(MBR);
+                while (lastEBR < end)
                 {
-                    fseek(archivo, ebr.part_next, SEEK_SET);
+                    fseek(archivo, lastEBR, SEEK_SET);
                     fread(&ebr, sizeof(EBR), 1, archivo);
-                    if (ebr.part_next == -1)
+                    if (ebr.part_next == -1 || ebr.part_size == 0)
                     {
+                        lastEBR += sizeof(EBR);
                         break;
                     }
-                    lastEBR = ebr.part_next + ebr.part_size;
+                    lastEBR += sizeof(EBR);
+                }
+                // Verificamos que no se repita el nombre 
+                if (existeEBRConMismoNombre(particion.part_name, archivo))
+                {
+                    cout << "¡Error! Ya existe una partición con el mismo nombre." << endl;
+                    fclose(archivo);
+                    return;
+                }
+                // Actualizamos el next del ebr anterior
+                if (lastEBR != sizeof(MBR))
+                {
+                    fseek(archivo, lastEBR - sizeof(EBR), SEEK_SET);
+                    fread(&ebr, sizeof(EBR), 1, archivo);
+                    ebr.part_next = lastEBR;
+                    fseek(archivo, lastEBR - sizeof(EBR), SEEK_SET);
+                    fwrite(&ebr, sizeof(EBR), 1, archivo);
                 }
                 // Crear el ebr
                 ebr.part_status = '0';
                 ebr.part_fit = particion.part_fit;
-                ebr.part_start = lastEBR + sizeof(EBR);
+                ebr.part_start = lastEBR;
                 ebr.part_size = tamano;
                 strcpy(ebr.part_name, particion.part_name);
                 ebr.part_next = -1;
                 // Guardar el ebr
                 fseek(archivo, lastEBR, SEEK_SET);
-                fwrite(&ebr, sizeof(EBR), 1, archivo);
+                fwrite(&ebr, sizeof(MBR), 1, archivo);
+                // Leer el ebr
+                fseek(archivo, lastEBR, SEEK_SET);
+                fread(&ebr, sizeof(EBR), 1, archivo);
             }
             else
             {
@@ -1163,6 +1260,31 @@ void fdisk::make_fdisk(fdisk *partition_comando)
     cout << "Ajuste: " << mbr.mbr_partition_4.part_fit << endl;
     cout << "Status: " << mbr.mbr_partition_4.part_status << endl;
     cout << "Start: " << mbr.mbr_partition_4.part_start << endl;
+    cout << "=====EBR=====" << endl;
+    
+    EBR ebr;
+    int lastEBR = sizeof(MBR);
+    while (lastEBR < mbr.mbr_tamano)
+    {
+        fseek(archivo, lastEBR, SEEK_SET);
+        fread(&ebr, sizeof(EBR), 1, archivo);
+        if (ebr.part_size == 0)
+        {
+            break;
+        }
+        cout << "Nombre: " << ebr.part_name << endl;
+        cout << "Tamaño: " << ebr.part_size << endl;
+        cout << "Ajuste: " << ebr.part_fit << endl;
+        cout << "Status: " << ebr.part_status << endl;
+        cout << "Start: " << ebr.part_start << endl;
+        cout << "Next: " << ebr.part_next << endl;
+        if (ebr.part_next == -1)
+        {
+            break;
+        }
+        lastEBR += sizeof(EBR);
+    }
+
 
     fclose(archivo);
 }
