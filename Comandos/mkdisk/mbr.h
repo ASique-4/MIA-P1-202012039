@@ -39,13 +39,13 @@ class MBR
 */
 Partition MBR::getPartition(int index){
     switch(index){
-        case 1:
+        case 0:
             return mbr_partition_1;
-        case 2:
+        case 1:
             return mbr_partition_2;
-        case 3:
+        case 2:
             return mbr_partition_3;
-        case 4:
+        case 3:
             return mbr_partition_4;
         default:
             return Partition();

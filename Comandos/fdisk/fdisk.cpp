@@ -28,18 +28,52 @@ struct EspacioLibre
  *
  * @return Un puntero a una partición.
  */
-Partition* buscarParticionLibre(MBR& mbr) {
+Partition* buscarParticionLibre(MBR& mbr, int size) {
     Partition* particionLibre = nullptr;
 
     Partition* particiones[4] = {&mbr.mbr_partition_1, &mbr.mbr_partition_2, &mbr.mbr_partition_3, &mbr.mbr_partition_4};
 
     for (int i = 0; i < 4; i++) {
-        if (particiones[i]->part_name[0] == '\0') {
+        if (particiones[i]->part_name[0] == '\0' && particiones[i]->part_size == size) {
             particionLibre = particiones[i];
             break;
         }
     }
+
+    if (particionLibre == nullptr) {
+        for (int i = 3; i >= 0; i--) {
+            if (particiones[i]->part_size == -1 && particiones[i]->part_start == -1 
+                && (particiones[i - 1]->part_size + particiones[i - 1]->part_start) == (mbr.mbr_tamano - size) ) {
+                particionLibre = particiones[i];
+                break;
+            }
+        }
+    }
     return particionLibre;
+}
+
+/**
+ * Devuelve un puntero a la partición extendida de un MBR dado
+ * 
+ * @param mbr El MBR del disco.
+ * 
+ * @return Un puntero a un objeto Partición.
+ */
+Partition *buscarParticionExtendida(MBR &mbr)
+{
+    Partition *particionExtendida = nullptr;
+
+    Partition *particiones[4] = {&mbr.mbr_partition_1, &mbr.mbr_partition_2, &mbr.mbr_partition_3, &mbr.mbr_partition_4};
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (particiones[i]->part_type == 'e' || particiones[i]->part_type == 'E')
+        {
+            particionExtendida = particiones[i];
+            break;
+        }
+    }
+    return particionExtendida;
 }
 
 
@@ -76,34 +110,41 @@ vector<EspacioLibre> calcularEspaciosLibres(MBR mbr)
     mbr.OrdenarParticiones();
 
     // Iteramos sobre las particiones para encontrar los espacios libres
-    int last_end = 0;
+    int last_end = sizeof(MBR);
+    bool any_partition_used = false; // Variable para verificar si se ha ocupado alguna partición
+
     for (int i = 0; i < 4; i++)
     {
+        // Si la partición no tiene tamaño ni start, es porque no se ha creado aún
+        if (particiones[i]->part_size == -1 && particiones[i]->part_start == -1 && any_partition_used)
+        {
+            // Agregamos un espacio libre que abarque todo el disco
+            espacios_libres.push_back({last_end, mbr.mbr_tamano - last_end, nullptr});
+            break;
+        }
+
         // Si la partición tiene un nombre, no es un espacio libre
         if (particiones[i]->part_name[0] != '\0')
         {
             // Si la partición comienza más allá del final de la última partición, hay un espacio libre entre ellas
             if (particiones[i]->part_start > last_end)
             {
-                espacios_libres.push_back({particiones[i]->part_start - last_end, last_end, nullptr});
+                espacios_libres.push_back({last_end, particiones[i]->part_start - last_end, nullptr});
             }
             // Actualizamos el final de la última partición
             last_end = particiones[i]->part_start + particiones[i]->part_size;
+            any_partition_used = true;
         }
-        // Si la partición no tiene nombre, es un espacio libre
-        else
+        // Si la partición no tiene nombre y tamaño y start no son -1, es un espacio libre
+        else if (particiones[i]->part_size != -1 && particiones[i]->part_start != -1)
         {
-            espacios_libres.push_back({particiones[i]->part_size, particiones[i]->part_start, nullptr});
+            espacios_libres.push_back({particiones[i]->part_start, particiones[i]->part_size, nullptr});
             // Actualizamos el final de la última partición
             last_end = particiones[i]->part_start + particiones[i]->part_size;
+            any_partition_used = true;
         }
     }
 
-    // Si hay un espacio libre al final del disco, lo agregamos
-    if (last_end < mbr.mbr_tamano)
-    {
-        espacios_libres.push_back({mbr.mbr_tamano - last_end, last_end, nullptr});
-    }
 
     // Retornamos el vector de espacios libres
     return espacios_libres;
@@ -137,34 +178,35 @@ int buscarIndexMejorAjuste(vector<EspacioLibre> espacios_libres, int tam_archivo
 
 
 
+
 /**
- * Encuentra el índice del espacio peor ajustado en el vector de espacios libres
+ * Encuentra el índice del espacio libre más grande en la memoria que es lo suficientemente grande para
+ * caber en la partición
  * 
  * @param espacios_libres Un vector de espacios libres.
- * @param tam_archivo El tamaño del archivo que se va a asignar.
+ * @param tam_particion El tamaño de la partición que queremos asignar.
  * 
- * @return El índice del peor ajuste.
+ * @return El índice del mayor espacio libre en la memoria.
  */
-int buscarIndexPeorAjuste(vector<EspacioLibre> espacios_libres, int tam_archivo)
+int buscarIndexPeorAjuste(vector<EspacioLibre> espacios_libres, int tam_particion)
 {
-    int peor_ajuste = -1;
+    int indice_mas_grande = -1;
+    int tam_mas_grande = 0;
 
     for (int i = 0; i < espacios_libres.size(); i++)
     {
-        if (espacios_libres[i].size >= tam_archivo)
+        cout << "Comparando " << espacios_libres[i].size << " con " << tam_particion << " y " << tam_mas_grande << " en " << i << endl;
+        if (espacios_libres[i].size >= tam_particion && espacios_libres[i].size > tam_mas_grande)
         {
-            if (peor_ajuste == -1 || espacios_libres[i].size > espacios_libres[peor_ajuste].size)
-            {
-                peor_ajuste = i;
-            }
-        } else if (peor_ajuste == -1) {
-            peor_ajuste = i;
+            indice_mas_grande = i;
+            tam_mas_grande = espacios_libres[i].size;
         }
     }
-    
 
-    return peor_ajuste;
+    return indice_mas_grande;
 }
+
+
 
 /**
  * Devuelve el índice del primer espacio libre que es lo suficientemente grande para contener el
@@ -366,7 +408,7 @@ void mejor_ajuste(fdisk *particion_comando, Partition particion)
             else
             {
                 // Buscamos una partición libre
-                Partition *particionLibre = buscarParticionLibre(mbr);
+                Partition *particionLibre = buscarParticionLibre(mbr, espacios_libres[best_fit_index].size);
                 // Si no encontramos una partición libre, mostramos un mensaje de error
                 if (particionLibre == nullptr)
                 {
@@ -387,7 +429,7 @@ void mejor_ajuste(fdisk *particion_comando, Partition particion)
         {
             // Para las particiones extendidas
             // Buscamos una partición libre
-            Partition *particionLibre = buscarParticionLibre(mbr);
+            Partition *particionLibre = buscarParticionLibre(mbr, espacios_libres[best_fit_index].size);
             // Si no encontramos una partición libre, mostramos un mensaje de error
             if (particionLibre == nullptr)
             {
@@ -403,7 +445,46 @@ void mejor_ajuste(fdisk *particion_comando, Partition particion)
             particionLibre->part_fit = particion.part_fit;
             strcpy(particionLibre->part_name, particion.part_name);
             particionLibre->part_start = getStart(particion.part_name, mbr);
-        }  
+        } else if (particion.part_type == 'L')
+        {
+            Partition *particionExtendida = buscarParticionExtendida(mbr);
+            // Para las particiones lógicas
+            if (particionExtendida != nullptr)
+            {
+                EBR ebr;
+                // Buscar el último ebr
+                int start = particionExtendida->part_start;
+                int size = particionExtendida->part_size;
+                int end = start + size;
+                int lastEBR = start;
+                while (lastEBR < end)
+                {
+                    fseek(archivo, lastEBR, SEEK_SET);
+                    fread(&ebr, sizeof(EBR), 1, archivo);
+                    if (ebr.part_next == -1)
+                    {
+                        break;
+                    }
+                    lastEBR = ebr.part_next + ebr.part_size;
+                }
+                // Crear el ebr
+                ebr.part_status = '0';
+                ebr.part_fit = particion.part_fit;
+                ebr.part_start = lastEBR + sizeof(EBR);
+                ebr.part_size = tamano;
+                strcpy(ebr.part_name, particion.part_name);
+                ebr.part_next = -1;
+                // Guardar el ebr
+                fseek(archivo, lastEBR, SEEK_SET);
+                fwrite(&ebr, sizeof(EBR), 1, archivo);
+            }
+            else
+            {
+                cout << "¡Error! No se ha encontrado una partición extendida." << endl;
+                fclose(archivo);
+                return;
+            }
+        }
     }
 
     // Ordenamos las particiones
@@ -449,9 +530,9 @@ void peor_ajuste(fdisk *particion_comando, Partition particion)
         cout << "Start: " << espacios_libres[i].start << endl;
     }
 
-    // Buscamos el mejor ajuste
+    // Buscamos el peor ajuste
     int best_fit_index = buscarIndexPeorAjuste(espacios_libres, tamano);
-    cout << "El mejor ajuste es: " << best_fit_index << endl;
+    cout << "El peor ajuste es: " << best_fit_index << endl;
     
 
     // Si encontramos el mejor ajuste, asignamos la partición
@@ -462,6 +543,9 @@ void peor_ajuste(fdisk *particion_comando, Partition particion)
         {
             if (espacios_libres[best_fit_index].partition != nullptr)
             {
+                cout << "!= nullptr" << endl;
+                cout << "Start: " << espacios_libres[best_fit_index].partition->part_start << endl;
+                cout << "Size: " << espacios_libres[best_fit_index].partition->part_size << endl;
                 espacios_libres[best_fit_index].partition->part_size = tamano;
                 espacios_libres[best_fit_index].partition->part_status = '0';
                 espacios_libres[best_fit_index].partition->part_type = 'P';
@@ -470,8 +554,11 @@ void peor_ajuste(fdisk *particion_comando, Partition particion)
             }
             else
             {
+                cout << "== nullptr" << endl;
+                cout << "Start: " << espacios_libres[best_fit_index].start << endl;
+                cout << "Size: " << espacios_libres[best_fit_index].size << endl;
                 // Buscamos una partición libre
-                Partition *particionLibre = buscarParticionLibre(mbr);
+                Partition *particionLibre = buscarParticionLibre(mbr, espacios_libres[best_fit_index].size);
                 // Si no encontramos una partición libre, mostramos un mensaje de error
                 if (particionLibre == nullptr)
                 {
@@ -492,24 +579,74 @@ void peor_ajuste(fdisk *particion_comando, Partition particion)
         } else if (particion.part_type == 'E' || particion.part_type == 'e')
         {
             // Para las particiones extendidas
-            // Buscamos una partición libre
-            Partition *particionLibre = buscarParticionLibre(mbr);
-            // Si no encontramos una partición libre, mostramos un mensaje de error
-            if (particionLibre == nullptr)
+            if (espacios_libres[best_fit_index].partition != nullptr)
             {
-                cout << "¡Error! Parece que el disco está tan lleno que las particiones están empezando a pelearse entre sí. No podemos crear otra." << endl;
+                espacios_libres[best_fit_index].partition->part_size = tamano;
+                espacios_libres[best_fit_index].partition->part_status = '0';
+                espacios_libres[best_fit_index].partition->part_type = 'E';
+                espacios_libres[best_fit_index].partition->part_fit = particion.part_fit;
+                strcpy(espacios_libres[best_fit_index].partition->part_name, particion.part_name);
+            }
+            else
+            {
+                // Buscamos una partición libre
+                Partition *particionLibre = buscarParticionLibre(mbr, espacios_libres[best_fit_index].size);
+                // Si no encontramos una partición libre, mostramos un mensaje de error
+                if (particionLibre == nullptr)
+                {
+                    cout << "¡Error! Parece que el disco está tan lleno que las particiones están empezando a pelearse entre sí. No podemos crear otra." << endl;
+                    fclose(archivo);
+                    return;
+                }
+
+                // Asignamos la partición
+                particionLibre->part_size = tamano;
+                particionLibre->part_status = '0';
+                particionLibre->part_type = 'E';
+                particionLibre->part_fit = particion.part_fit;
+                strcpy(particionLibre->part_name, particion.part_name);
+                particionLibre->part_start = getStart(particion.part_name, mbr);
+
+            }
+        } else if (particion.part_type == 'L' || particion.part_type == 'l')
+        {
+            Partition *particionExtendida = buscarParticionExtendida(mbr);
+            // Para las particiones lógicas
+            if (particionExtendida != nullptr)
+            {
+                EBR ebr;
+                // Buscar el último ebr
+                int start = particionExtendida->part_start;
+                int size = particionExtendida->part_size;
+                int end = start + size;
+                int lastEBR = start;
+                while (lastEBR < end)
+                {
+                    fseek(archivo, lastEBR, SEEK_SET);
+                    fread(&ebr, sizeof(EBR), 1, archivo);
+                    if (ebr.part_next == -1)
+                    {
+                        break;
+                    }
+                    lastEBR = ebr.part_next + ebr.part_size;
+                }
+                // Crear el ebr
+                ebr.part_status = '0';
+                ebr.part_fit = particion.part_fit;
+                ebr.part_start = lastEBR + sizeof(EBR);
+                ebr.part_size = tamano;
+                strcpy(ebr.part_name, particion.part_name);
+                ebr.part_next = -1;
+                // Guardar el ebr
+                fseek(archivo, lastEBR, SEEK_SET);
+                fwrite(&ebr, sizeof(EBR), 1, archivo);
+            }
+            else
+            {
+                cout << "¡Error! No se ha encontrado una partición extendida." << endl;
                 fclose(archivo);
                 return;
             }
-
-            // Asignamos la partición
-            particionLibre->part_size = tamano;
-            particionLibre->part_status = '0';
-            particionLibre->part_type = 'E';
-            particionLibre->part_fit = particion.part_fit;
-            strcpy(particionLibre->part_name, particion.part_name);
-            particionLibre->part_start = getStart(particion.part_name, mbr);
-
         }
     }
 
@@ -570,7 +707,7 @@ void primer_ajuste(fdisk *particion_comando, Partition particion)
             else
             {
                 // Buscamos una partición libre
-                Partition *particionLibre = buscarParticionLibre(mbr);
+                Partition *particionLibre = buscarParticionLibre(mbr, espacios_libres[first_fit_index].size);
                 // Si no encontramos una partición libre, mostramos un mensaje de error
                 if (particionLibre == nullptr)
                 {
@@ -591,7 +728,7 @@ void primer_ajuste(fdisk *particion_comando, Partition particion)
         {
             // Para las particiones extendidas
             // Buscamos una partición libre
-            Partition *particionLibre = buscarParticionLibre(mbr);
+            Partition *particionLibre = buscarParticionLibre(mbr, espacios_libres[first_fit_index].size);
             // Si no encontramos una partición libre, mostramos un mensaje de error
             if (particionLibre == nullptr)
             {
@@ -608,6 +745,46 @@ void primer_ajuste(fdisk *particion_comando, Partition particion)
             strcpy(particionLibre->part_name, particion.part_name);
             particionLibre->part_start = getStart(particion.part_name, mbr);
 
+        } else if (particion.part_type == 'L')
+        {
+            // Para las particiones lógicas
+            // Buscamos una partición extendida
+            Partition *particionExtendida = buscarParticionExtendida(mbr);
+            if (particionExtendida != nullptr)
+            {
+                // Leemos el ebr
+                EBR ebr;
+                fseek(archivo, particionExtendida->part_start, SEEK_SET);
+                fread(&ebr, sizeof(EBR), 1, archivo);
+                // Buscamos el último ebr
+                int lastEBR = particionExtendida->part_start;
+                while (true)
+                {
+                    fseek(archivo, ebr.part_next, SEEK_SET);
+                    fread(&ebr, sizeof(EBR), 1, archivo);
+                    if (ebr.part_next == -1)
+                    {
+                        break;
+                    }
+                    lastEBR = ebr.part_next + ebr.part_size;
+                }
+                // Crear el ebr
+                ebr.part_status = '0';
+                ebr.part_fit = particion.part_fit;
+                ebr.part_start = lastEBR + sizeof(EBR);
+                ebr.part_size = tamano;
+                strcpy(ebr.part_name, particion.part_name);
+                ebr.part_next = -1;
+                // Guardar el ebr
+                fseek(archivo, lastEBR, SEEK_SET);
+                fwrite(&ebr, sizeof(EBR), 1, archivo);
+            }
+            else
+            {
+                cout << "¡Error! No se ha encontrado una partición extendida." << endl;
+                fclose(archivo);
+                return;
+            }
         }
     }
 
@@ -645,7 +822,7 @@ void crear_particion(Partition particion, fdisk *particion_comando)
     // Verificamos que la partición no exista
     for (int i = 0; i < 4; i++)
     {
-        if (strcmp(mbr.getPartition(i).part_name, particion.part_name) == 0)
+        if (strcmp(mbr.getPartition(i).part_name, particion.part_name) == 0 && particion.part_type != 'L')
         {
             cout << "¡Error! Ya hay una partición con ese nombre. No seas poco creativo y ponle otro." << endl;
             return;
@@ -667,6 +844,21 @@ void crear_particion(Partition particion, fdisk *particion_comando)
                 return;
             }
         }
+        // Verificamos los fit
+        if (particion.part_fit == 'f' || particion.part_fit == 'F')
+        {
+            primer_ajuste(particion_comando, particion);
+        } else if (particion.part_fit == 'b' || particion.part_fit == 'B')
+        {
+            mejor_ajuste(particion_comando, particion);
+        } else if (particion.part_fit == 'w' || particion.part_fit == 'W')
+        {
+            peor_ajuste(particion_comando, particion);
+        } else 
+        {
+            cout << "¡Error! El fit no es válido. Solo se aceptan los siguientes: 'bf', 'ff', 'wf'" << endl;
+            return;
+        }
     }
 
     // Si es una partición lógica
@@ -685,6 +877,21 @@ void crear_particion(Partition particion, fdisk *particion_comando)
         if (!has_extended_partition)
         {
             cout << "¡Error! La partición Lógica se siente sola sin su amiga Extendida" << endl;
+            return;
+        }
+        // Verificamos los fit
+        if (particion.part_fit == 'f' || particion.part_fit == 'F')
+        {
+            primer_ajuste(particion_comando, particion);
+        } else if (particion.part_fit == 'b' || particion.part_fit == 'B')
+        {
+            mejor_ajuste(particion_comando, particion);
+        } else if (particion.part_fit == 'w' || particion.part_fit == 'W')
+        {
+            peor_ajuste(particion_comando, particion);
+        } else 
+        {
+            cout << "¡Error! El fit no es válido. Solo se aceptan los siguientes: 'bf', 'ff', 'wf'" << endl;
             return;
         }
     }
@@ -745,7 +952,7 @@ void delete_partition(fdisk *partition)
 
     // Buscamos la partición y la eliminamos si existe
     Partition *particion = mbr.findPartition(partition->name);
-    if (particion != NULL && confirmar_eliminación())
+    if (particion != nullptr && confirmar_eliminación())
     {
         int tmpInicio = particion->part_start;
         int tmpSize = particion->part_size;
@@ -755,24 +962,53 @@ void delete_partition(fdisk *partition)
         particion->part_start = tmpInicio;
         particion->part_name[0] = '\0';
         particion->part_size = tmpSize;
+        // Particiones
+        Partition *particiones[4] = {&mbr.mbr_partition_1, &mbr.mbr_partition_2, &mbr.mbr_partition_3, &mbr.mbr_partition_4};
+        // Bandera para saber si es la ultima partición
+        bool isLastPartition = true;
         // Si hay espacio libre, lo unimos
         for (int i = 0; i < 4; i++)
         {
-            Partition *currentPartition = mbr.findPartition(mbr.getPartition(i).part_name);
-            if (currentPartition->part_start == particion->part_start + particion->part_size && currentPartition->part_name[0] == '\0')
+            Partition *currentPartition = particiones[i];
+            if (currentPartition->part_start == tmpInicio + tmpSize && strcmp(currentPartition->part_name, "\0") == 0 )
             {
+                cout << "Es la partición siguiente y está vacía." << endl;
                 particion->part_size += currentPartition->part_size;
                 currentPartition = {};
                 currentPartition->part_start = -1;
                 currentPartition->part_name[0] = '\0';
                 currentPartition->part_size = -1;
+
+                isLastPartition = false;
                 break;
             }
             if (currentPartition->part_start > tmpInicio + tmpSize)
             {
+                cout << "Hay espacio libre entre la partición y la siguiente." << endl;
                 particion->part_size += currentPartition->part_start - (tmpInicio + tmpSize);
+
+                isLastPartition = false;
                 break;
             }
+            if (currentPartition->part_start == tmpInicio + tmpSize && strcmp(currentPartition->part_name, "\0") != 0)
+            {
+                cout << "Es la partición siguiente y no está vacía." << endl;
+                particion->part_fit = '\0';
+                particion->part_status = '\0';
+                particion->part_type = '\0';
+
+                isLastPartition = false;
+                break;
+            }
+        }
+
+        if (isLastPartition)
+        {
+            cout << "Es la última partición." << endl;
+            particion->part_size += mbr.mbr_tamano - (tmpInicio + tmpSize);
+            particion->part_fit = '\0';
+            particion->part_status = '\0';
+            particion->part_type = '\0';
         }
     }
     else
