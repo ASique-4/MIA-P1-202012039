@@ -4,6 +4,7 @@
 
 #include "./Analizador/Analizador.h"
 
+#include "./Comandos/mount/mount.cpp"
 #include "./Comandos/mkdisk/mkdisk.cpp"
 #include "./Comandos/rmdisk/rmdisk.cpp"
 #include "./Comandos/fdisk/fdisk.cpp"

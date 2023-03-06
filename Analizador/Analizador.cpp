@@ -3,6 +3,7 @@
 #include "../Comandos/rmdisk/rmdisk.h"
 #include "../Comandos/mkdisk/mkdisk.h"
 #include "../Comandos/fdisk/fdisk.h"
+#include "../Comandos/mount/mount.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -176,6 +177,41 @@ void analizar_fdisk(char *parametros){
 }
 
 /**
+ * Toma una cadena, la divide en tokens y luego usa esos tokens para crear un objeto MOUNT
+ * 
+ * @param parametros Los parámetros que el usuario ingresó.
+ * 
+ */
+void analizar_mount(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    MOUNT *particion = new MOUNT();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "path"){
+            particion->path = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
+        } else if (tipo == "name"){
+            strcpy(particion->name, valor.c_str());
+        } else {
+            cout << "¡Error! mount solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (particion->path == "" || particion->name == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'mount'" << endl;
+        return;
+    }
+    //Creamos la particion
+    particion->make_mount(particion);
+}
+
+/**
  * Toma una cadena, la divide en tokens y luego llama a la función apropiada para manejar el comando
  * 
  * @param comando El comando que el usuario ingresó.
@@ -192,6 +228,9 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "fdisk") == 0){
         cout << "fdisk" << endl;
         analizar_fdisk(token);
+    }else if(strcasecmp(token, "mount") == 0){
+        cout << "mount" << endl;
+        analizar_mount(token);
     }else if(strcasecmp(token, "exit") == 0){
         cout << "exit" << endl;
         exit(0);
