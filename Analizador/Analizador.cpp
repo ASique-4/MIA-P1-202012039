@@ -4,12 +4,18 @@
 #include "../Comandos/mkdisk/mkdisk.h"
 #include "../Comandos/fdisk/fdisk.h"
 #include "../Comandos/mount/mount.h"
+#include "../Comandos/unmount/unmount.h"
+#include "../Comandos/mount/ListaDobleMount.h"
 
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
 
 using namespace std;
+
+// Variables globales
+ListaDobleMount* listaMountGlobal = new ListaDobleMount();
+
 
 /*Funciones que devuelven el tipo y el valor de un parametro en strings ya en lowercase */
 /**
@@ -208,7 +214,36 @@ void analizar_mount(char *parametros){
         return;
     }
     //Creamos la particion
-    particion->make_mount(particion);
+    ListaDobleMount* mount = particion->make_mount(particion);
+    listaMountGlobal = mount;
+    listaMountGlobal->imprimir();
+}
+
+void analizar_unmount(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    UNMOUNT *particion = new UNMOUNT();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "id"){
+            particion->id = valor;
+        } else {
+            cout << "¡Error! unmount solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (particion->id == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'unmount'" << endl;
+        return;
+    }
+    //Creamos la particion
+    particion->make_unmount(particion, listaMountGlobal);
 }
 
 /**
@@ -231,6 +266,9 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "mount") == 0){
         cout << "mount" << endl;
         analizar_mount(token);
+    }else if(strcasecmp(token, "unmount") == 0){
+        cout << "unmount" << endl;
+        analizar_unmount(token);
     }else if(strcasecmp(token, "exit") == 0){
         cout << "exit" << endl;
         exit(0);

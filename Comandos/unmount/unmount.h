@@ -9,8 +9,8 @@ class UNMOUNT
 {
     public:
         UNMOUNT();
-        char name[16] = "\0";
-        void make_unmount(UNMOUNT *disco);
+        string id = "";
+        void make_unmount(UNMOUNT *disco, ListaDobleMount *lista);
     private:
 };
 

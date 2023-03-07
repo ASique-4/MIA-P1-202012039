@@ -1,10 +1,16 @@
 #include "mount.h"
 #include <iostream>
 #include <string.h>
+#include "ListaDobleMount.cpp"
+
 
 using namespace std;
 
 MOUNT::MOUNT()
+{
+}
+
+ListaDobleMount::ListaDobleMount()
 {
 }
 
@@ -25,6 +31,7 @@ string createID(MOUNT *disco)
     FILE *archivo;
     archivo = fopen(disco->path.c_str(), "rb+");
     MBR mbr;
+    fseek(archivo, 0, SEEK_SET);
     fread(&mbr, sizeof(MBR), 1, archivo);
     // Buscamos la partición
     for (int i = 0; i < 4; i++)
@@ -51,11 +58,38 @@ string createID(MOUNT *disco)
     return "39" + to_string(num) + name;
 }
 
-void MOUNT::make_mount(MOUNT *disco)
+ListaDobleMount* MOUNT::make_mount(MOUNT *disco)
 {
     cout << "Path: " << disco->path << endl;
     cout << "Name: " << disco->name << endl;
 
-    
-
+    // Creamos el ID
+    string id = createID(disco);
+    // Si no se pudo crear el ID
+    if (id == "")
+    {
+        cout << "No se pudo crear el ID, parece que no soy tan inteligente como creía" << endl;
+        return nullptr;
+    }
+    // Abrimos el archivo
+    FILE *archivo;
+    archivo = fopen(disco->path.c_str(), "rb+");
+    // Leemos el mbr
+    MBR mbr;
+    fread(&mbr, sizeof(MBR), 1, archivo);
+    // Creamos la particion mount
+    ParticionMount* particion = new ParticionMount();
+    particion->id = id;
+    particion->particion = mbr.findPartition(disco->name);
+    mbr.findPartition(disco->name)->part_status = '1';
+    // Agregamos la partición a la lista
+    ListaDobleMount* lista = new ListaDobleMount();
+    lista->insertar(particion);
+    // Escribimos el mbr
+    fseek(archivo, 0, SEEK_SET);
+    fwrite(&mbr, sizeof(MBR), 1, archivo);
+    // Cerramos el archivo
+    fclose(archivo);
+    // Retornamos la lista
+    return lista;
 }

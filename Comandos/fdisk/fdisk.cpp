@@ -448,14 +448,10 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
 {
     if (particion.part_type == 'P' || particion.part_type == 'p')
         {
-            cout << "Particion primaria" << endl;
             cout << espacios_libres[best_fit_index].size << endl;
             cout << espacios_libres[best_fit_index].start << endl;
             if (espacios_libres[best_fit_index].partition != nullptr)
             {
-                cout << "!= nullptr" << endl;
-                cout << "Start: " << espacios_libres[best_fit_index].partition->part_start << endl;
-                cout << "Size: " << espacios_libres[best_fit_index].partition->part_size << endl;
                 espacios_libres[best_fit_index].partition->part_size = tamano;
                 espacios_libres[best_fit_index].partition->part_status = '0';
                 espacios_libres[best_fit_index].partition->part_type = 'P';
@@ -464,7 +460,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
             }
             else
             {
-                cout << "== nullptr" << endl;
 
                 // Buscamos una partición libre
                 Partition *particionLibre = buscarParticionLibre(mbr, espacios_libres[best_fit_index].size);
@@ -483,6 +478,7 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
                 particionLibre->part_fit = particion.part_fit;
                 strcpy(particionLibre->part_name, particion.part_name);
                 particionLibre->part_start = getStart(particion.part_name, mbr);
+                guardarMBR(mbr, archivo);
 
             }
         } else if (particion.part_type == 'E' || particion.part_type == 'e')
@@ -520,7 +516,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
         } else if (particion.part_type == 'L' || particion.part_type == 'l')
         {
             Partition *particionExtendida = buscarParticionExtendida(mbr);
-            cout << "Particion extendida: " << particionExtendida->part_name << endl;
             // Para las particiones lógicas
             if (particionExtendida != nullptr)
             {
@@ -573,7 +568,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
                     fclose(archivo);
                     return;
                 }
-                cout << "Ultimo EBR: " << lastEBR << endl;
                 // Actualizamos el next del ebr anterior
                 if (lastEBR != particionExtendida->part_start)
                 {
@@ -678,16 +672,11 @@ void peor_ajuste(fdisk *particion_comando, Partition particion)
 
     // Copiamos el array de calcularEspaciosLibres a espacio_libre
     vector<EspacioLibre> espacios_libres = calcularEspaciosLibres(mbr);
-    for (int i = 0; i < espacios_libres.size(); i++)
-    {
-        cout << "Espacio libre: " << espacios_libres[i].size << endl;
-    }
+
 
     // Buscamos el peor ajuste
     int best_fit_index = buscarIndexPeorAjuste(espacios_libres, tamano);
-    cout << "Best fit index: " << best_fit_index << endl;
     
-    cout << "Part type: " << particion.part_type << endl;
 
     // Si encontramos el mejor ajuste, asignamos la partición
     // Para las particiones parimarias
@@ -823,7 +812,6 @@ void crear_particion(Partition particion, fdisk *particion_comando)
         bool has_extended_partition = false;
         for (int i = 0; i < 4; i++)
         {
-            cout << "Partición: " << mbr.getPartition(i).part_type << endl;
             if (mbr.getPartition(i).part_type == 'e' || mbr.getPartition(i).part_type == 'E')
             {
                 has_extended_partition = true;
@@ -931,7 +919,6 @@ void delete_partition(fdisk *partition)
             Partition *currentPartition = particiones[i];
             if (currentPartition->part_start == tmpInicio + tmpSize && strcmp(currentPartition->part_name, "\0") == 0 )
             {
-                cout << "Es la partición siguiente y está vacía." << endl;
                 particion->part_size += currentPartition->part_size;
                 currentPartition = {};
                 currentPartition->part_start = -1;
@@ -943,7 +930,6 @@ void delete_partition(fdisk *partition)
             }
             if (currentPartition->part_start > tmpInicio + tmpSize)
             {
-                cout << "Hay espacio libre entre la partición y la siguiente." << endl;
                 particion->part_size += currentPartition->part_start - (tmpInicio + tmpSize);
 
                 isLastPartition = false;
@@ -951,7 +937,6 @@ void delete_partition(fdisk *partition)
             }
             if (currentPartition->part_start == tmpInicio + tmpSize && strcmp(currentPartition->part_name, "\0") != 0)
             {
-                cout << "Es la partición siguiente y no está vacía." << endl;
                 particion->part_fit = '\0';
                 particion->part_status = '\0';
                 particion->part_type = '\0';
@@ -963,7 +948,6 @@ void delete_partition(fdisk *partition)
 
         if (isLastPartition)
         {
-            cout << "Es la última partición." << endl;
             particion->part_size += mbr.mbr_tamano - (tmpInicio + tmpSize);
             particion->part_fit = '\0';
             particion->part_status = '\0';
@@ -992,7 +976,6 @@ void delete_partition(fdisk *partition)
                 Partition *currentPartition = particiones[i];
                 if (currentPartition->part_start == tmpInicio + tmpSize && strcmp(currentPartition->part_name, "\0") == 0 )
                 {
-                    cout << "Es la partición siguiente y está vacía." << endl;
                     ebr.part_size += currentPartition->part_size;
                     currentPartition = {};
                     currentPartition->part_start = -1;
@@ -1004,7 +987,6 @@ void delete_partition(fdisk *partition)
                 }
                 if (currentPartition->part_start > tmpInicio + tmpSize)
                 {
-                    cout << "Hay espacio libre entre la partición y la siguiente." << endl;
                     ebr.part_size += currentPartition->part_start - (tmpInicio + tmpSize);
 
                     isLastPartition = false;
@@ -1012,7 +994,6 @@ void delete_partition(fdisk *partition)
                 }
                 if (currentPartition->part_start == tmpInicio + tmpSize && strcmp(currentPartition->part_name, "\0") != 0)
                 {
-                    cout << "Es la partición siguiente y no está vacía." << endl;
                     ebr.part_fit = '\0';
                     ebr.part_status = '\0';
                     isLastPartition = false;
@@ -1022,7 +1003,6 @@ void delete_partition(fdisk *partition)
 
             if (isLastPartition)
             {
-                cout << "Es la última partición." << endl;
                 ebr.part_size += mbr.mbr_tamano - (tmpInicio + tmpSize);
                 ebr.part_fit = '\0';
                 ebr.part_status = '\0';
@@ -1139,70 +1119,8 @@ void fdisk::make_fdisk(fdisk *partition_comando)
     FILE *archivo;
     archivo = fopen(partition_comando->path.c_str(), "rb+");
     MBR mbr;
-    
     fseek(archivo, 0, SEEK_SET);
     fread(&mbr, sizeof(MBR), 1, archivo);
-    // Imprimimos el mbr
-    cout << "MBR" << endl;
-    cout << "Tamaño: " << mbr.mbr_tamano << endl;
-    cout << "Fecha de creación: " << mbr.mbr_fecha_creacion << endl;
-    cout << "Disk signature: " << mbr.mbr_disk_signature << endl;
-    cout << "Particiones: " << endl;
-    cout << "====================================" << endl;
-    // Leemos las particiones
-    cout << "Partición 1: " << mbr.mbr_partition_1.part_name << endl;
-    cout << "Tamaño: " << mbr.mbr_partition_1.part_size << endl;
-    cout << "Inicio: " << mbr.mbr_partition_1.part_start << endl;
-    cout << "Tipo: " << mbr.mbr_partition_1.part_type << endl;
-    cout << "Ajuste: " << mbr.mbr_partition_1.part_fit << endl;
-    cout << "Estado: " << mbr.mbr_partition_1.part_status << endl;
-    cout << "====================================" << endl;
-    cout << "Partición 2: " << mbr.mbr_partition_2.part_name << endl;
-    cout << "Tamaño: " << mbr.mbr_partition_2.part_size << endl;
-    cout << "Inicio: " << mbr.mbr_partition_2.part_start << endl;
-    cout << "Tipo: " << mbr.mbr_partition_2.part_type << endl;
-    cout << "Ajuste: " << mbr.mbr_partition_2.part_fit << endl;
-    cout << "Estado: " << mbr.mbr_partition_2.part_status << endl;
-    cout << "====================================" << endl;
-    cout << "Partición 3: " << mbr.mbr_partition_3.part_name << endl;
-    cout << "Tamaño: " << mbr.mbr_partition_3.part_size << endl;
-    cout << "Inicio: " << mbr.mbr_partition_3.part_start << endl;
-    cout << "Tipo: " << mbr.mbr_partition_3.part_type << endl;
-    cout << "Ajuste: " << mbr.mbr_partition_3.part_fit << endl;
-    cout << "Estado: " << mbr.mbr_partition_3.part_status << endl;
-    cout << "====================================" << endl;
-    cout << "Partición 4: " << mbr.mbr_partition_4.part_name << endl;
-    cout << "Tamaño: " << mbr.mbr_partition_4.part_size << endl;
-    cout << "Inicio: " << mbr.mbr_partition_4.part_start << endl;
-    cout << "Tipo: " << mbr.mbr_partition_4.part_type << endl;
-    cout << "Ajuste: " << mbr.mbr_partition_4.part_fit << endl;
-    cout << "Estado: " << mbr.mbr_partition_4.part_status << endl;
-    cout << "====================================" << endl;
-
-    int lasEBR = sizeof(MBR);
-    EBR ebr;
-    // Leer particiones lógicas
-    for (int i = 0; i < 4; i++)
-    {
-        fseek(archivo, lasEBR, SEEK_SET);
-        fread(&ebr, sizeof(EBR), 1, archivo);
-        if (ebr.part_size != 0)
-        {
-            cout << "EBR" << endl;
-            cout << "Tamaño: " << ebr.part_size << endl;
-            cout << "Inicio: " << ebr.part_start << endl;
-            cout << "Siguiente: " << ebr.part_next << endl;
-            cout << "Nombre: " << ebr.part_name << endl;
-            cout << "Ajuste: " << ebr.part_fit << endl;
-            cout << "Estado: " << ebr.part_status << endl;
-            cout << "====================================" << endl;
-        }
-        if (ebr.part_next == -1)
-        {
-            break;
-        }
-        lasEBR += sizeof(EBR);
-    }
     fclose(archivo);
 
 }

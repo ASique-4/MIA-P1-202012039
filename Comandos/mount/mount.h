@@ -2,6 +2,7 @@
 #define MOUNT_H
 
 #include <iostream>
+#include "../mount/ListaDobleMount.h"
 
 using namespace std;
 
@@ -11,7 +12,7 @@ class MOUNT
         MOUNT();
         string path = "";
         char name[16] = "\0";
-        void make_mount(MOUNT *disco);
+        ListaDobleMount* make_mount(MOUNT *disco);
     private:
 };
 
