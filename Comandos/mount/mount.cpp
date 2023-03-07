@@ -80,7 +80,8 @@ ListaDobleMount* MOUNT::make_mount(MOUNT *disco)
     // Creamos la particion mount
     ParticionMount* particion = new ParticionMount();
     particion->id = id;
-    particion->particion = mbr.findPartition(disco->name);
+    strcpy(particion->name, disco->name);
+    particion->path = disco->path;
     mbr.findPartition(disco->name)->part_status = '1';
     // Agregamos la partición a la lista
     ListaDobleMount* lista = new ListaDobleMount();

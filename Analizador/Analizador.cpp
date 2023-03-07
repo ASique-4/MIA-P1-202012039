@@ -182,6 +182,22 @@ void analizar_fdisk(char *parametros){
     particion->make_fdisk(particion);
 }
 
+
+/**
+ * Toma dos listas de tipo ListaDobleMount y agrega la segunda lista a la primera
+ * 
+ * @param lista1 La lista donde se agregarán los datos.
+ * @param lista2 La lista que contiene los datos que se añadirán a lista1
+ */
+void agregarMount(ListaDobleMount* lista1, ListaDobleMount* lista2)
+{
+    ParticionMount* aux = lista2->primero;
+    while(aux != NULL){
+        lista1->insertar(aux);
+        aux = aux->siguiente;
+    }
+}
+
 /**
  * Toma una cadena, la divide en tokens y luego usa esos tokens para crear un objeto MOUNT
  * 
@@ -214,9 +230,7 @@ void analizar_mount(char *parametros){
         return;
     }
     //Creamos la particion
-    ListaDobleMount* mount = particion->make_mount(particion);
-    listaMountGlobal = mount;
-    listaMountGlobal->imprimir();
+    agregarMount(listaMountGlobal, particion->make_mount(particion));
 }
 
 void analizar_unmount(char *parametros){

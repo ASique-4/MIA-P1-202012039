@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string.h>
-#include "../fdisk/partition.h"
 
 using namespace std;
 
@@ -11,7 +10,8 @@ class ParticionMount
 {
     public:
         string id;
-        Partition *particion;
+        char name[16];
+        string path;
         ParticionMount *siguiente = NULL;
         ParticionMount *anterior = NULL;
     private:

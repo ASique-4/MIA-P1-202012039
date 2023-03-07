@@ -30,11 +30,18 @@ void UNMOUNT::make_unmount(UNMOUNT *disco, ListaDobleMount *lista)
             cout << "¡Error! No se encontró la partición con el ID: " << disco->id << endl;
             return;
         }
-        cout << "Desmontando partición con ID: " << particion->id << endl;
-        cout << "Status: " << particion->particion->part_status << endl;
-        cout << lista->primero->id << endl;
-        lista->eliminar(disco->id);
-        cout << "Status: " << particion->particion->part_status << endl;
+        cout << "Partición encontrada" << endl;
+        FILE *archivo = fopen(particion->path.c_str(), "rb+");
+        MBR mbr;
+        cout << "Leyendo MBR: " << particion->path.c_str() << endl;
+        fseek(archivo, 0, SEEK_SET);
+        fread(&mbr, sizeof(MBR), 1, archivo);
+        mbr.findPartition(particion->name)->part_status = '0';
+        cout << "Status: " << mbr.findPartition(particion->name)->part_status << endl;
+        fseek(archivo, 0, SEEK_SET);
+        fwrite(&mbr, sizeof(MBR), 1, archivo);
+        fclose(archivo);
+        lista->eliminar(particion->id);
         cout << "¡Partición desmontada con éxito!" << endl;
     }
     catch (exception e)

@@ -49,35 +49,31 @@ ParticionMount *ListaDobleMount::buscar(string id)
 
 void ListaDobleMount::eliminar(string id)
 {
-    if (primero == NULL)
+    ParticionMount *aux = buscar(id);
+    if (aux != NULL)
     {
-        return;
-    }
-
-    ParticionMount *aux = primero;
-    while (aux != NULL)
-    {
-        cout << "ID: " << aux->id << endl;
-        if (aux->id == id)
+        cout << "Encontrado" << endl;
+        if (aux == primero)
         {
-            if (aux == primero)
+            primero = primero->siguiente;
+            if (primero != NULL)
             {
-                primero = primero->siguiente;
                 primero->anterior = NULL;
             }
-            else if (aux == ultimo)
+        }
+        else if (aux == ultimo)
+        {
+            ultimo = ultimo->anterior;
+            if (ultimo != NULL)
             {
-                ultimo = ultimo->anterior;
                 ultimo->siguiente = NULL;
             }
-            else
-            {
-                aux->anterior->siguiente = aux->siguiente;
-                aux->siguiente->anterior = aux->anterior;
-            }
-            delete aux;
-            return;
         }
-        aux = aux->siguiente;
+        else
+        {
+            aux->anterior->siguiente = aux->siguiente;
+            aux->siguiente->anterior = aux->anterior;
+        }
+        delete aux;
     }
 }

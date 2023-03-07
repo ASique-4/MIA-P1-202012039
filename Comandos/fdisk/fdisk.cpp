@@ -1071,48 +1071,55 @@ void fdisk::make_fdisk(fdisk *partition_comando)
         return;
     }
 
-    // Verificamos qué se va a hacer con la partición
-    if (partition_comando->delete_ == "full" || partition_comando->delete_ == "FULL")
+    try
     {
-        delete_partition(partition_comando);
-    }
-    else if (partition_comando->add != 0)
-    {
-        if (partition_comando->unit == 'k' || partition_comando->unit == 'K')
+        // Verificamos qué se va a hacer con la partición
+        if (partition_comando->delete_ == "full" || partition_comando->delete_ == "FULL")
         {
-            // KiloBytes
-            partition_comando->add = partition_comando->add * 1024;
+            delete_partition(partition_comando);
         }
-        else if (partition_comando->unit == 'm' || partition_comando->size == 'M')
+        else if (partition_comando->add != 0)
         {
-            // MegaBytes
-            partition_comando->add = partition_comando->add * 1024 * 1024;
+            if (partition_comando->unit == 'k' || partition_comando->unit == 'K')
+            {
+                // KiloBytes
+                partition_comando->add = partition_comando->add * 1024;
+            }
+            else if (partition_comando->unit == 'm' || partition_comando->size == 'M')
+            {
+                // MegaBytes
+                partition_comando->add = partition_comando->add * 1024 * 1024;
+            }
+            else if (partition_comando->unit == 'b' || partition_comando->size == 'B')
+            {
+                // Bytes
+                partition_comando->add = partition_comando->add;
+            }
+            else
+            {
+                cout << "¡Error! La unidad no es válida. Debe ser k, m o b." << endl;
+                return;
+            }
+            agregar_espacio(partition_comando);
         }
-        else if (partition_comando->unit == 'b' || partition_comando->size == 'B')
+        else if (partition_comando->delete_ == "" && !isdigit(partition_comando->add))
         {
-            // Bytes
-            partition_comando->add = partition_comando->add;
+            Partition new_particion;
+            strcpy(new_particion.part_name, partition_comando->name);
+            new_particion.part_size = partition_comando->size;
+            new_particion.part_fit = partition_comando->fit;
+            new_particion.part_type = partition_comando->type;
+            new_particion.part_status = '0';
+            crear_particion(new_particion, partition_comando);
         }
         else
         {
-            cout << "¡Error! La unidad no es válida. Debe ser k, m o b." << endl;
+            cout << "¡Error! No tengo ni idea de lo que intentas hacer con esa partición. ¿Podrías darme una pista?" << endl;
             return;
         }
-        agregar_espacio(partition_comando);
-    }
-    else if (partition_comando->delete_ == "" && !isdigit(partition_comando->add))
+    }catch (int e)
     {
-        Partition new_particion;
-        strcpy(new_particion.part_name, partition_comando->name);
-        new_particion.part_size = partition_comando->size;
-        new_particion.part_fit = partition_comando->fit;
-        new_particion.part_type = partition_comando->type;
-        new_particion.part_status = '0';
-        crear_particion(new_particion, partition_comando);
-    }
-    else
-    {
-        cout << "¡Error! No tengo ni idea de lo que intentas hacer con esa partición. ¿Podrías darme una pista?" << endl;
+        cout << "¡Error! No se ha encontrado la partición." << endl;
         return;
     }
     // Escribimos el mbr
@@ -1121,6 +1128,20 @@ void fdisk::make_fdisk(fdisk *partition_comando)
     MBR mbr;
     fseek(archivo, 0, SEEK_SET);
     fread(&mbr, sizeof(MBR), 1, archivo);
+    cout << "==========================" << endl;
+    for (int i = 0; i < 4; i++)
+    {
+        Partition *particion = mbr.findPartition(mbr.getPartition(i).part_name);
+        
+        cout << "Nombre: " << particion->part_name << endl;
+        cout << "Tamaño: " << particion->part_size << endl;
+        cout << "Inicio: " << particion->part_start << endl;
+        cout << "Tipo: " << particion->part_type << endl;
+        cout << "Ajuste: " << particion->part_fit << endl;
+        cout << "Estado: " << particion->part_status << endl;
+        cout << "==========================" << endl;
+        
+    }
     fclose(archivo);
 
 }
