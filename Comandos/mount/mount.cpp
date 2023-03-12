@@ -1,6 +1,7 @@
 #include "mount.h"
 #include <iostream>
 #include <string.h>
+#include "../fdisk/ebr.h"
 #include "ListaDobleMount.cpp"
 
 
@@ -27,6 +28,7 @@ string createID(MOUNT *disco)
 {
     // Número de partición
     int num = -1;
+    int num2 = -1;
     // Abrimos el mbr
     FILE *archivo;
     archivo = fopen(disco->path.c_str(), "rb+");
@@ -45,8 +47,32 @@ string createID(MOUNT *disco)
     // Si no se encontró la partición
     if (num == -1)
     {
-        cout << "No se encontró la partición" << endl;
-        return "";
+        // Verificamos si es particion logica
+        for (int i = 0; i < 4; i++)
+        {
+            if (mbr.getPartition(i).part_type == 'e')
+            {
+                num2 = i;
+                EBR ebr;
+                fseek(archivo, mbr.getPartition(i).part_start, SEEK_SET);
+                fread(&ebr, sizeof(EBR), 1, archivo);
+                while (ebr.part_next != -1)
+                {
+                    if (strcmp(ebr.part_name, disco->name) == 0)
+                    {
+                        num = i;
+                        break;
+                    }
+                    fseek(archivo, ebr.part_next, SEEK_SET);
+                    fread(&ebr, sizeof(EBR), 1, archivo);
+                }
+            }
+        }
+        if (num == -1)
+        {
+            cout << "No se encontró la partición" << endl;
+            return "";
+        }
     }
     // Nombre del archivo
     string name = disco->path;
@@ -55,6 +81,10 @@ string createID(MOUNT *disco)
     // Eliminamos el path
     name = name.substr(name.find_last_of("/") + 1, name.length());
     // Creamos el ID
+    if(num2 != -1)
+    {
+        return "39" + to_string(num) + to_string(num2) + name;
+    }
     return "39" + to_string(num) + name;
 }
 
@@ -82,7 +112,55 @@ ListaDobleMount* MOUNT::make_mount(MOUNT *disco)
     particion->id = id;
     strcpy(particion->name, disco->name);
     particion->path = disco->path;
-    mbr.findPartition(disco->name)->part_status = '1';
+    try
+    {
+        bool found = false;
+        // Buscamos la partición
+        for (int i = 0; i < 4; i++)
+        {
+            if (strcmp(mbr.getPartition(i).part_name, disco->name) == 0)
+            {
+                mbr.findPartition(mbr.getPartition(i).part_name)->part_status = '1';
+                found = true;
+                break;
+            }
+        }
+        // Si no se encontró la partición
+        if (!found)
+        {
+            // Verificamos si es particion logica
+            for (int i = 0; i < 4; i++)
+            {
+                if (mbr.getPartition(i).part_type == 'e')
+                {
+                    EBR ebr;
+                    fseek(archivo, mbr.getPartition(i).part_start, SEEK_SET);
+                    fread(&ebr, sizeof(EBR), 1, archivo);
+                    while (ebr.part_next != -1)
+                    {
+                        if (strcmp(ebr.part_name, disco->name) == 0)
+                        {
+                            ebr.part_status = '1';
+                            found = true;
+                            break;
+                        }
+                        fseek(archivo, ebr.part_next, SEEK_SET);
+                        fread(&ebr, sizeof(EBR), 1, archivo);
+                    }
+                }
+            }
+            if (!found)
+            {
+                cout << "No se encontró la partición" << endl;
+                return nullptr;
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        cout << "No se encontró la partición" << endl;
+        return nullptr;
+    }
     // Agregamos la partición a la lista
     ListaDobleMount* lista = new ListaDobleMount();
     lista->insertar(particion);

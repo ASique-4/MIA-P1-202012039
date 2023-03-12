@@ -6,6 +6,7 @@
 #include "../Comandos/mount/mount.h"
 #include "../Comandos/unmount/unmount.h"
 #include "../Comandos/mount/ListaDobleMount.h"
+#include "../Comandos/rep/rep.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -261,6 +262,49 @@ void analizar_unmount(char *parametros){
 }
 
 /**
+ * Toma una cadena, la divide en tokens y luego usa esos tokens para crear un informe
+ * 
+ * @param parametros La cadena que contiene los parámetros.
+ * 
+ * @return un puntero a un objeto REP.
+ */
+void analizar_rep(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro reporte
+    REP *reporte = new REP();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "path"){
+            reporte->path = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
+        } else if (tipo == "name"){
+            reporte->name = valor;
+        } else if (tipo == "id"){
+            reporte->id = valor;
+        } else if (tipo == "ruta"){
+            reporte->ruta = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
+        } else {
+            cout << "¡Error! rep solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (reporte->path == "" || reporte->name == "" || reporte->id == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'rep'" << endl;
+        return;
+    }
+    //Creamos el reporte
+    reporte->make_rep(reporte, listaMountGlobal);
+}
+
+
+
+/**
  * Toma una cadena, la divide en tokens y luego llama a la función apropiada para manejar el comando
  * 
  * @param comando El comando que el usuario ingresó.
@@ -283,6 +327,9 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "unmount") == 0){
         cout << "unmount" << endl;
         analizar_unmount(token);
+    }else if(strcasecmp(token, "rep") == 0){
+        cout << "rep" << endl;
+        analizar_rep(token);
     }else if(strcasecmp(token, "exit") == 0){
         cout << "exit" << endl;
         exit(0);

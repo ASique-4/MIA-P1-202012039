@@ -1,5 +1,6 @@
 #include "unmount.h"
 #include "../mount/ListaDobleMount.h"
+#include "../fdisk/ebr.h"
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
@@ -12,15 +13,12 @@ UNMOUNT::UNMOUNT()
 
 void UNMOUNT::make_unmount(UNMOUNT *disco, ListaDobleMount *lista)
 {
-    cout << "Desmontando partición..." << endl;
-    cout << "ID: " << disco->id << endl;
     if (disco->id == "")
     {
         cout << "¡Error! No podemos desmontar la partición si no nos dicen cuál es. ¿Alguna pista? " << endl;
         return;
     }
     lista->imprimir();
-    cout << "Buscando partición con ID: " << disco->id << endl;
     try
     {
         ParticionMount *particion = new ParticionMount();
@@ -30,19 +28,62 @@ void UNMOUNT::make_unmount(UNMOUNT *disco, ListaDobleMount *lista)
             cout << "¡Error! No se encontró la partición con el ID: " << disco->id << endl;
             return;
         }
-        cout << "Partición encontrada" << endl;
         FILE *archivo = fopen(particion->path.c_str(), "rb+");
         MBR mbr;
-        cout << "Leyendo MBR: " << particion->path.c_str() << endl;
         fseek(archivo, 0, SEEK_SET);
         fread(&mbr, sizeof(MBR), 1, archivo);
-        mbr.findPartition(particion->name)->part_status = '0';
-        cout << "Status: " << mbr.findPartition(particion->name)->part_status << endl;
+        
+        try
+        {
+            bool found = false;
+            for (int i = 0; i < 4; i++)
+            {
+                if (strcmp(mbr.getPartition(i).part_name, particion->name) == 0)
+                {
+                    mbr.findPartition(particion->name)->part_status = '0';
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    if (mbr.getPartition(i).part_type == 'e')
+                    {
+                        EBR ebr;
+                        fseek(archivo, mbr.getPartition(i).part_start, SEEK_SET);
+                        fread(&ebr, sizeof(EBR), 1, archivo);
+                        while (ebr.part_next != -1)
+                        {
+                            if (strcmp(ebr.part_name, particion->name) == 0)
+                            {
+                                ebr.part_status = '0';
+                                found = true;
+                                break;
+                            }
+                            fseek(archivo, ebr.part_next, SEEK_SET);
+                            fread(&ebr, sizeof(EBR), 1, archivo);
+                        }
+                    }
+                }
+                if (!found)
+                {
+                    cout << "No se encontró la partición" << endl;
+                    return;
+                }
+            }
+        }
+        catch (const std::exception& e)
+        {
+            cout << "No se encontró la partición" << endl;
+            return;
+        }
+
         fseek(archivo, 0, SEEK_SET);
         fwrite(&mbr, sizeof(MBR), 1, archivo);
         fclose(archivo);
         lista->eliminar(particion->id);
-        cout << "¡Partición desmontada con éxito!" << endl;
     }
     catch (exception e)
     {

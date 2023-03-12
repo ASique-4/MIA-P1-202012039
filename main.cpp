@@ -10,6 +10,7 @@
 #include "./Comandos/fdisk/fdisk.cpp"
 #include "./Comandos/unmount/unmount.cpp"
 #include "./Comandos/mount/mount.cpp"
+#include "./Comandos/rep/rep.cpp"
 
 using namespace std;
 

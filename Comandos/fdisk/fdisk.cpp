@@ -484,6 +484,8 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
         } else if (particion.part_type == 'E' || particion.part_type == 'e')
         {
             // Para las particiones extendidas
+            cout << espacios_libres[best_fit_index].size << endl;
+            cout << espacios_libres[best_fit_index].start << endl;
             if (espacios_libres[best_fit_index].partition != nullptr)
             {
                 espacios_libres[best_fit_index].partition->part_size = tamano;
@@ -494,6 +496,7 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
             }
             else
             {
+
                 // Buscamos una partición libre
                 Partition *particionLibre = buscarParticionLibre(mbr, espacios_libres[best_fit_index].size);
                 // Si no encontramos una partición libre, mostramos un mensaje de error
@@ -511,6 +514,7 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
                 particionLibre->part_fit = particion.part_fit;
                 strcpy(particionLibre->part_name, particion.part_name);
                 particionLibre->part_start = getStart(particion.part_name, mbr);
+                guardarMBR(mbr, archivo);
 
             }
         } else if (particion.part_type == 'L' || particion.part_type == 'l')
@@ -573,14 +577,14 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
                 {
                     fseek(archivo, lastEBR - sizeof(EBR), SEEK_SET);
                     fread(&ebr, sizeof(EBR), 1, archivo);
-                    ebr.part_next = lastEBR;
+                    ebr.part_next = lastEBR + tamano + start + size;
                     fseek(archivo, lastEBR - sizeof(EBR), SEEK_SET);
                     fwrite(&ebr, sizeof(EBR), 1, archivo);
                 }
                 // Crear el ebr
                 ebr.part_status = '0';
                 ebr.part_fit = particion.part_fit;
-                ebr.part_start = lastEBR;
+                ebr.part_start = lastEBR + start + size + tamano;
                 ebr.part_size = tamano;
                 strcpy(ebr.part_name, particion.part_name);
                 ebr.part_next = -1;

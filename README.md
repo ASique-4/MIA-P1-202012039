@@ -68,4 +68,22 @@ Este comando permite montar una partición en el sistema de archivos del sistema
 mount >path=/home/user/Disco1.dsk >name=part1
 ```
 
+## 5. UNMOUNT
+Este comando permite desmontar una partición en el sistema de archivos del sistema operativo. El comando UNMOUNT tiene la siguiente sintaxis:
+
+### Ejemplo
+```bash
+//Desmonta la partición primaria del disco de la carpeta home
+unmount >path=/home/user/Disco1.dsk >name=part1
+```
+
+## 6. MKFS
+Este comando permite formatear una partición en el sistema de archivos del sistema operativo. El comando MKFS tiene la siguiente sintaxis:
+
+### Ejemplo
+```bash
+//Formatea la partición primaria del disco de la carpeta home
+mkfs >type=fast >fs=3fs >id=part1
+```
+
 
