@@ -13,6 +13,7 @@
 #include "./Comandos/rep/rep.cpp"
 #include "./Comandos/mkfs/mkfs.cpp"
 #include "./Comandos/execute/execute.cpp"
+#include "./Comandos/login/login.cpp"
 
 using namespace std;
 

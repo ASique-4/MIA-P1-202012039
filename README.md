@@ -86,4 +86,12 @@ Este comando permite formatear una partición en el sistema de archivos del sist
 mkfs >type=fast >fs=3fs >id=part1
 ```
 
+## 7. LOGIN
+Este comando permite iniciar sesión en el sistema de archivos del sistema operativo. El comando LOGIN tiene la siguiente sintaxis:
+
+### Ejemplo
+```bash
+//Inicia sesión en el sistema de archivos del sistema operativo
+login >user="mi usuario" >pass="mi pwd" >id=061Disco1
+```
 
