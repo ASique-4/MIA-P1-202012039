@@ -1,6 +1,7 @@
 #include "rep.h"
 #include "../fdisk/ebr.h"
 #include "../mount/ListaDobleMount.h"
+#include "../Estructuras/SuperBloque.h"
 #include <time.h>
 #include <iostream>
 #include <fstream>
@@ -122,11 +123,28 @@ int porcentajeEspacioLibre(MBR mbr)
     return (mbr.mbr_tamano - espacioLibre) * 100 / mbr.mbr_tamano;
 }
 
+/**
+ * Calcula el porcentaje de espacio ocupado en el disco
+ * 
+ * @param mbr El MBR del disco.
+ * @param espacioOcupado La cantidad de espacio ocupado por la partición.
+ * 
+ * @return El porcentaje de espacio ocupado por la partición.
+ */
 int porcentajeEspacioOcupado(MBR mbr,int espacioOcupado)
 {
     return espacioOcupado * 100 / mbr.mbr_tamano;
 }
 
+/**
+ * Devuelve el porcentaje de espacio utilizado por una partición lógica
+ * 
+ * @param mbr El MBR del disco.
+ * @param name Nombre de la partición
+ * @param path La ruta al disco
+ * 
+ * @return El porcentaje de espacio utilizado por la partición lógica.
+ */
 int porcentajeLogica(MBR mbr, string name, string path)
 {
     int espacioLogica = 0;
@@ -161,6 +179,13 @@ int porcentajeLogica(MBR mbr, string name, string path)
     return espacioLogica * 100 / mbr.mbr_tamano;
 }
 
+/**
+ * Crea un archivo .dot, luego crea un archivo .png a partir del archivo .dot
+ * 
+ * @param mbr La estructura MBR
+ * @param path La ruta al archivo que desea crear.
+ * @param pathDisco La ruta al archivo del disco.
+ */
 void rep_disk(MBR mbr, string path, string pathDisco)
 {
     cout << "mbr_tamano: " << mbr.mbr_tamano << endl;
@@ -255,30 +280,89 @@ void rep_disk(MBR mbr, string path, string pathDisco)
 
 }
 
+void rep_superbloque(SuperBloque sp, string path, string pathDisco)
+{
+    cout << "SUPERBLOQUE" << endl;
+    string filename = pathDisco;
+    size_t lastindex = filename.find_last_of(".");
+    filename = filename.substr(0, lastindex) + ".dot";
+    FILE* graph;
+    graph = fopen(filename.c_str(), "w");
+    if (graph != NULL)
+    {
+        string nombreArchivo = pathDisco;
+        size_t lastindex = nombreArchivo.find_last_of(".");
+        nombreArchivo = nombreArchivo.substr(0, lastindex);
+        lastindex = nombreArchivo.find_last_of("/");
+        nombreArchivo = nombreArchivo.substr(lastindex + 1, nombreArchivo.length());
+
+        fprintf(graph, "digraph G {\n");
+        fprintf(graph, "labelloc = \"t\";\n");
+        fprintf(graph, "parent [\n");
+        fprintf(graph, "shape=plaintext\n");
+        fprintf(graph, "label=<\n");
+        fprintf(graph, "<table border='1' cellborder='1' >\n");
+
+        fprintf(graph, "<tr><td rowspan=\"3\" bgcolor='#0E8388'>Reporte de SUPERBLOQUE</td>\n");
+        fprintf(graph, "<td rowspan=\"3\" bgcolor='#0E8388'>sb_nombre_hd: %s</td>\n",nombreArchivo.c_str());
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_filesystem_type: %d</td>\n",sp.s_filesystem_type);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_inodes_count: %d</td>\n",sp.s_inodes_count);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_blocks_count: %d</td>\n",sp.s_blocks_count);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_free_blocks_count: %d</td>\n",sp.s_free_blocks_count);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_free_inodes_count: %d</td>\n",sp.s_free_inodes_count);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_mtime: %s</td>\n",ctime(&sp.s_mtime));
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_umtime: %s</td>\n",ctime(&sp.s_umtime));
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_mnt_count: %d</td>\n",sp.s_mnt_count);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_magic: %d</td>\n",sp.s_magic);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_inode_size: %d</td>\n",sp.s_inode_size);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_block_size: %d</td>\n",sp.s_block_size);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_first_ino: %d</td>\n",sp.s_first_ino);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_first_blo: %d</td>\n",sp.s_first_blo);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_bm_inode_start: %d</td>\n",sp.s_bm_inode_start);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_bm_block_start: %d</td>\n",sp.s_bm_block_start);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_inode_start: %d</td>\n",sp.s_inode_start);
+        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_block_start: %d</td>\n",sp.s_block_start);
+        fprintf(graph, "</tr>\n");
+
+        fprintf(graph, "</table>\n");
+        fprintf(graph, ">];\n");
+        fprintf(graph, "}\n");
+    }
+    fclose(graph);
+    string comando1 = "mkdir -p " + path.substr(0, path.find_last_of("/"));
+    system(comando1.c_str());
+
+    string comando = "dot -Tpng " + filename + " -o " + path;
+    system(comando.c_str());
+        
+}
+
 void REP::make_rep(REP* rep, ListaDobleMount* listaMount)
 {
-    MBR mbr;
+    
     FILE* disco;
     cout << "path: " << listaMount->buscar(rep->id)->path << endl;
     disco = fopen(listaMount->buscar(rep->id)->path.c_str(), "rb+");
     if(disco != NULL)
     {
+        MBR mbr;
         fread(&mbr, sizeof(MBR), 1, disco);
         if(mbr.mbr_tamano > 0)
         {
             if(rep->name == "mbr")
             {
                 cout << "MBR" << endl;
-                cout << "Ruta: " << rep->path << endl;
                 mbr_rep(mbr, rep->path, listaMount->buscar(rep->id)->path);
-                cout << "Se ha creado el reporte mbr en la ruta: " << rep->ruta << endl;
             }
             else if(rep->name == "disk")
             {
                 cout << "DISK" << endl;
-                cout << "Ruta: " << rep->path << endl;
                 rep_disk(mbr, rep->path, listaMount->buscar(rep->id)->path);
-                cout << "Se ha creado el reporte disk en la ruta: " << rep->ruta << endl;
+            }
+            else if (rep->name == "sp")
+            {
+                cout << "SUPERBLOQUE" << endl;
+                //rep_superbloque();
             }
         }
         else

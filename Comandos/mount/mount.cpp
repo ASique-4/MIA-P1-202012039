@@ -163,6 +163,12 @@ ListaDobleMount* MOUNT::make_mount(MOUNT *disco)
     }
     // Agregamos la partición a la lista
     ListaDobleMount* lista = new ListaDobleMount();
+    particion->montada = true;
+    // Hora de montaje
+    particion->mount_time = time(0);
+    // Aumentamos el contador de montajes
+    particion->mnt_count++;
+    // Agregamos la partición a la lista
     lista->insertar(particion);
     // Escribimos el mbr
     fseek(archivo, 0, SEEK_SET);

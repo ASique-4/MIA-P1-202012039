@@ -1,17 +1,16 @@
-#ifndef TABLAINODOS_H
-#define TABLAINODOS_H
+#ifndef INODO_H
+#define INODO_H
 
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 
 using namespace std;
 
-class TablaInodos
+class Inodo
 {
     public:
-        TablaInodos();
+        Inodo();
         int i_uid;
         int i_gid;
         int i_size;
@@ -23,4 +22,4 @@ class TablaInodos
         int i_perm;
 };
 
-#endif // TABLAINODOS_H
+#endif // INODO_H

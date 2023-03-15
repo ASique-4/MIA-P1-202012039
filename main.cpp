@@ -11,6 +11,8 @@
 #include "./Comandos/unmount/unmount.cpp"
 #include "./Comandos/mount/mount.cpp"
 #include "./Comandos/rep/rep.cpp"
+#include "./Comandos/mkfs/mkfs.cpp"
+#include "./Comandos/execute/execute.cpp"
 
 using namespace std;
 

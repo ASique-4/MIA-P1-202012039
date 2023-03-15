@@ -11,7 +11,10 @@ class MKFS
 {
     public:
         MKFS();
-        void make_mkfs(MKFS* mkfs);
+        char id[16];
+        char type[16] = "Full";
+        char fs[16] = "2fs";
+        void make_mkfs(MKFS* mkfs, ListaDobleMount* listaMount);
 };
 
 #endif // MKFS_H

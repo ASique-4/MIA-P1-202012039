@@ -7,6 +7,8 @@
 #include "../Comandos/unmount/unmount.h"
 #include "../Comandos/mount/ListaDobleMount.h"
 #include "../Comandos/rep/rep.h"
+#include "../Comandos/mkfs/mkfs.h"
+#include "../Comandos/execute/execute.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -302,6 +304,86 @@ void analizar_rep(char *parametros){
     reporte->make_rep(reporte, listaMountGlobal);
 }
 
+/**
+ * Toma una cadena, la divide en tokens y luego verifica si los tokens son parámetros válidos para el
+ * comando exec
+ * 
+ * @param parametros La cadena que contiene los parámetros.
+ * 
+ * @return El valor del parámetro.
+ */
+void analizar_exec(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    Execute *ejecutar = new Execute();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "path"){
+            // Verficamos que la extension sea .eea
+            if (valor.find(".eea") != string::npos){
+            ejecutar->path = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
+            } else {
+                cout << "¡Error! exec solo acepta archivos con extensión .eea" << endl;
+                return;
+            }
+        } else {
+            cout << "¡Error! exec solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (ejecutar->path == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'exec'" << endl;
+        return;
+    }
+    //Creamos la particion
+    ejecutar->ejecutar(ejecutar);
+}
+
+/**
+ * Toma una cadena, la divide en tokens y luego usa esos tokens para crear una nueva partición
+ * en formato EXT2 o EXT3
+ * 
+ * @param parametros La cadena que contiene los parámetros.
+ * 
+ * @return Un puntero al primer carácter de una cadena C.
+ */
+void analizar_mkfs(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    MKFS *particion = new MKFS();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "id"){
+            strcpy(particion->id, valor.c_str());
+        } else if (tipo == "type"){
+            strcpy(particion->type, valor.c_str());
+        } else if (tipo == "fs"){
+            strcpy(particion->fs, valor.c_str());
+        } else {
+            cout << "¡Error! mkfs solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (particion->id == "" || particion->type == "" || particion->fs == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'mkfs'" << endl;
+        return;
+    }
+    //Creamos la particion
+    particion->make_mkfs(particion, listaMountGlobal);
+}
+
 
 
 /**
@@ -330,6 +412,12 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "rep") == 0){
         cout << "rep" << endl;
         analizar_rep(token);
+    }else if(strcasecmp(token, "exec") == 0){
+        cout << "exec" << endl;
+        analizar_exec(token);
+    }else if(strcasecmp(token, "mkfs") == 0){
+        cout << "mkfs" << endl;
+        analizar_mkfs(token);
     }else if(strcasecmp(token, "exit") == 0){
         cout << "exit" << endl;
         exit(0);

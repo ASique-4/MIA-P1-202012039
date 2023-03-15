@@ -23,7 +23,7 @@ void UNMOUNT::make_unmount(UNMOUNT *disco, ListaDobleMount *lista)
     {
         ParticionMount *particion = new ParticionMount();
         particion = lista->buscar(disco->id);
-        if (particion == NULL)
+        if (particion == NULL || particion->montada == false)
         {
             cout << "¡Error! No se encontró la partición con el ID: " << disco->id << endl;
             return;
@@ -83,7 +83,7 @@ void UNMOUNT::make_unmount(UNMOUNT *disco, ListaDobleMount *lista)
         fseek(archivo, 0, SEEK_SET);
         fwrite(&mbr, sizeof(MBR), 1, archivo);
         fclose(archivo);
-        lista->eliminar(particion->id);
+        particion->montada = false;
     }
     catch (exception e)
     {
