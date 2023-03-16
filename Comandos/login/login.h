@@ -2,8 +2,18 @@
 #define LOGIN_H
 
 #include <iostream>
+#include "user.h"
 
 using namespace std;
+
+User::User()
+{
+    id = "";
+    tipo = "";
+    grupo = "";
+    usuario = "";
+    password = "";
+}
 
 class Login
 {
@@ -13,7 +23,7 @@ class Login
         string password;
         string id;
 
-        void make_login(Login *login, ListaDobleMount *listaDobleMount);
+        User* make_login(Login *login, ListaDobleMount *listaDobleMount);
 
     private:
 

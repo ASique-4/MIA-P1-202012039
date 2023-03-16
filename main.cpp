@@ -14,6 +14,7 @@
 #include "./Comandos/mkfs/mkfs.cpp"
 #include "./Comandos/execute/execute.cpp"
 #include "./Comandos/login/login.cpp"
+#include "./Comandos/logout/Logout.cpp"
 
 using namespace std;
 

@@ -4,9 +4,19 @@
 #include <string.h>
 #include <stdio.h>
 
+using namespace std;
 
-void Login::make_login(Login *login, ListaDobleMount *listaDobleMount)
+Login::Login()
 {
+    user = "";
+    password = "";
+    id = "";
+}
+
+
+User* Login::make_login(Login *login, ListaDobleMount *listaDobleMount)
+{
+    
     FILE *archivo;
     string pathCarpeta = listaDobleMount->buscar(login->id)->path.substr(0, listaDobleMount->buscar(login->id)->path.find_last_of("/"));
     
@@ -16,33 +26,50 @@ void Login::make_login(Login *login, ListaDobleMount *listaDobleMount)
     if (archivo == NULL)
     {
         cout << "Error: No se pudo abrir el archivo de usuarios" << endl;
-        return;
+        return nullptr;
     }
     // Verificar si existe el usuario
+    User* user;
     char linea[100];
     while (fgets(linea, 100, archivo) != NULL)
     {
-        // Eliminamos el salto de linea
-        linea[strlen(linea) - 1] = '\0';
-        // Verificamos si es el usuario
         string lineaString = linea;
-        if (lineaString.find(login->user) != string::npos)
+        // id
+        user->id = lineaString.substr(0, lineaString.find_first_of(","));
+        // tipo 
+        lineaString = lineaString.substr(lineaString.find_first_of(",") + 1);
+        user->tipo = lineaString.substr(0, lineaString.find_first_of(","));
+        // grupo
+        lineaString = lineaString.substr(lineaString.find_first_of(",") + 1);
+        user->grupo = lineaString.substr(0, lineaString.find_first_of(","));
+
+        if (user->tipo == "U")
+        {    
+            // usuario
+            lineaString = lineaString.substr(lineaString.find_first_of(",") + 1);
+            user->usuario = lineaString.substr(0, lineaString.find_first_of(","));
+            // password
+            lineaString = lineaString.substr(lineaString.find_first_of(",") + 1);
+            user->password = lineaString.substr(0, lineaString.find_first_of(","));
+
+        }
+
+        if (user->usuario == login->user)
         {
-            // Verificamos si la contraseña es correcta
-            if (lineaString.find(login->password) != string::npos)
+            if (password == login->password)
             {
                 cout << "Login exitoso" << endl;
-                fclose(archivo);
-                return;
+                return user;
             }
             else
             {
                 cout << "Error: Contraseña incorrecta" << endl;
-                fclose(archivo);
-                return;
+                return nullptr;
             }
         }
     }
+    cout << "Error: Usuario no encontrado" << endl;
+    return nullptr;
 
     
 }

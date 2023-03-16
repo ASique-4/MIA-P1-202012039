@@ -9,6 +9,8 @@
 #include "../Comandos/rep/rep.h"
 #include "../Comandos/mkfs/mkfs.h"
 #include "../Comandos/execute/execute.h"
+#include "../Comandos/login/login.h"
+#include "../Comandos/logout/Logout.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -18,6 +20,7 @@ using namespace std;
 
 // Variables globales
 ListaDobleMount* listaMountGlobal = new ListaDobleMount();
+User* userGlobal = new User();
 
 
 /*Funciones que devuelven el tipo y el valor de un parametro en strings ya en lowercase */
@@ -384,6 +387,51 @@ void analizar_mkfs(char *parametros){
     particion->make_mkfs(particion, listaMountGlobal);
 }
 
+/**
+ * Toma una cadena, la divide en tokens y luego usa esos tokens para crear un objeto de inicio de
+ * sesión
+ * 
+ * @param parametros Los parámetros que el usuario ingresó.
+ * 
+ * @return Se devuelve la variable userGlobal.
+ */
+void analizar_login(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    Login *login = new Login();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "user"){
+            
+            login->user = valor;
+        } else if (tipo == "pass"){
+            login->password = valor;
+        } else if (tipo == "id"){
+            login->id = valor;
+        } else {
+            cout << "¡Error! login solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (login->user == "" || login->password == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'login'" << endl;
+        return;
+    }
+    //Creamos la particion
+    userGlobal = login->make_login(login, listaMountGlobal);
+}
+
+void analizar_logout(char *parametros){
+    // Cerramos la sesión
+    Logout *logout = new Logout();
+    logout->make_logout(userGlobal);
+}
 
 
 /**
@@ -418,6 +466,12 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "mkfs") == 0){
         cout << "mkfs" << endl;
         analizar_mkfs(token);
+    }else if(strcasecmp(token, "login") == 0){
+        cout << "login" << endl;
+        analizar_login(token);
+    }else if(strcasecmp(token, "logout") == 0){
+        cout << "logout" << endl;
+        analizar_logout(token);
     }else if(strcasecmp(token, "exit") == 0){
         cout << "exit" << endl;
         exit(0);
