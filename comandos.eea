@@ -1,0 +1,19 @@
+mkdisk >size=3000 >unit=K >path=/home/user/Disco1.dsk
+fdisk >size=500 >path=/home/user/Disco1.dsk >name=Particion1
+fdisk >size=300 >path=/home/user/Disco1.dsk >name=Particion2
+fdisk >size=400 >path=/home/user/Disco1.dsk >name=Particion3 >type=E
+fdisk >size=100 >path=/home/user/Disco1.dsk >name=Particion4 >type=L
+fdisk >size=200 >path=/home/user/Disco1.dsk >name=Particion5 >type=L
+fdisk >size=100 >path=/home/user/Disco1.dsk >name=Particion6 >type=L
+fdisk >size=100 >path=/home/user/Disco1.dsk >name=Particion7 
+mkdisk >size=3000 >unit=K >path=/home/user/Disco2.dsk
+fdisk >size=500 >path=/home/user/Disco2.dsk >name=Particion8
+fdisk >size=300 >path=/home/user/Disco2.dsk >name=Particion9
+fdisk >size=400 >path=/home/user/Disco2.dsk >name=Particion10 >type=E
+fdisk >size=100 >path=/home/user/Disco2.dsk >name=Particion11 >type=L
+fdisk >size=200 >path=/home/user/Disco2.dsk >name=Particion12 >type=L
+fdisk >size=100 >path=/home/user/Disco2.dsk >name=Particion13
+mount >path=/home/user/Disco1.dsk >name=Particion1
+mount >path=/home/user/Disco2.dsk >name=Particion8
+rep >id=390Disco1 >name=mbr >path=/home/user/Reportes/ReporteMBR1.jpg
+rep >id=390Disco2 >name=mbr >path=/home/user/Reportes/ReporteMBR2.jpg

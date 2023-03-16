@@ -59,9 +59,11 @@ void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
                     disco = fopen(pathDisco.c_str(), "rb+");
                     if (disco != NULL)
                     {
-                        fseek(disco, sizeof(MBR), SEEK_SET);
+                        int lastEBR = mbr.getPartition(i).part_start;
+                        
                         while (true)
                         {
+                            fseek(disco, lastEBR, SEEK_SET);
                             fread(&ebr, sizeof(EBR), 1, disco);
                             if (ebr.part_name[0] != '\0')
                             {
@@ -77,7 +79,7 @@ void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
                             {
                                 break;
                             }
-                            fseek(disco, ebr.part_next, SEEK_SET);
+                            lastEBR = ebr.part_next;
                         }
                         fclose(disco);
                     }
@@ -230,7 +232,7 @@ void rep_disk(MBR mbr, string path, string pathDisco)
                     if (disco != NULL)
                     {
                         
-                        int lastEBR = sizeof(MBR);
+                        int lastEBR = mbr.getPartition(i).part_start;
                         while (true)
                         {
                             fseek(disco, lastEBR, SEEK_SET);
@@ -258,9 +260,6 @@ void rep_disk(MBR mbr, string path, string pathDisco)
                     fprintf(graph, "<tr>\n");
                     fputs(tmpEBR.c_str(), graph);
 
-                } else if (mbr.getPartition(i).part_type == 'L')
-                {
-                    fprintf(graph, "<td rowspan=\"3\" bgcolor='#0E8388'>LOGICA <br />%d%%</td>\n",(porcentajeEspacioOcupado(mbr,mbr.getPartition(i).part_size)));
                 }
             }
         }

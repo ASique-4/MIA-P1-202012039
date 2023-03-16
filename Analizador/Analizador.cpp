@@ -460,8 +460,8 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "rep") == 0){
         cout << "rep" << endl;
         analizar_rep(token);
-    }else if(strcasecmp(token, "exec") == 0){
-        cout << "exec" << endl;
+    }else if(strcasecmp(token, "execute") == 0){
+        cout << "execute" << endl;
         analizar_exec(token);
     }else if(strcasecmp(token, "mkfs") == 0){
         cout << "mkfs" << endl;
