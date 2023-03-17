@@ -279,9 +279,8 @@ void rep_disk(MBR mbr, string path, string pathDisco)
 
 }
 
-void rep_superbloque(SuperBloque sp, string path, string pathDisco)
+void rep_superbloque(string path, string pathDisco, SuperBloque sp)
 {
-    cout << "SUPERBLOQUE" << endl;
     string filename = pathDisco;
     size_t lastindex = filename.find_last_of(".");
     filename = filename.substr(0, lastindex) + ".dot";
@@ -302,36 +301,37 @@ void rep_superbloque(SuperBloque sp, string path, string pathDisco)
         fprintf(graph, "label=<\n");
         fprintf(graph, "<table border='1' cellborder='1' >\n");
 
-        fprintf(graph, "<tr><td rowspan=\"3\" bgcolor='#0E8388'>Reporte de SUPERBLOQUE</td>\n");
-        fprintf(graph, "<td rowspan=\"3\" bgcolor='#0E8388'>sb_nombre_hd: %s</td>\n",nombreArchivo.c_str());
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_filesystem_type: %d</td>\n",sp.s_filesystem_type);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_inodes_count: %d</td>\n",sp.s_inodes_count);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_blocks_count: %d</td>\n",sp.s_blocks_count);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_free_blocks_count: %d</td>\n",sp.s_free_blocks_count);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_free_inodes_count: %d</td>\n",sp.s_free_inodes_count);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_mtime: %s</td>\n",ctime(&sp.s_mtime));
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_umtime: %s</td>\n",ctime(&sp.s_umtime));
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_mnt_count: %d</td>\n",sp.s_mnt_count);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_magic: %d</td>\n",sp.s_magic);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_inode_size: %d</td>\n",sp.s_inode_size);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_block_size: %d</td>\n",sp.s_block_size);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_first_ino: %d</td>\n",sp.s_first_ino);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_first_blo: %d</td>\n",sp.s_first_blo);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_bm_inode_start: %d</td>\n",sp.s_bm_inode_start);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_bm_block_start: %d</td>\n",sp.s_bm_block_start);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_inode_start: %d</td>\n",sp.s_inode_start);
-        fprintf(graph, "< rowspan=\"3\" bgcolor='#0E8388'>sb_block_start: %d</td>\n",sp.s_block_start);
-        fprintf(graph, "</tr>\n");
+        fprintf(graph, "<tr><td  bgcolor='#EA5455'>Reporte de SUPERBLOQUE</td></tr>\n");
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_nombre_hd: %s</td></tr>\n",nombreArchivo.c_str());
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_filesystem_type: %d</td></tr>\n",sp.s_filesystem_type);
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_inodes_count: %d</td></tr>\n",sp.s_inodes_count);
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_blocks_count: %d</td></tr>\n",sp.s_blocks_count);
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_free_blocks_count: %d</td></tr>\n",sp.s_free_blocks_count);
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_free_inodes_count: %d</td></tr>\n",sp.s_free_inodes_count);
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_mtime: %s</td></tr>\n",ctime(&sp.s_mtime));
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_umtime: %s</td></tr>\n",ctime(&sp.s_umtime));
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_mnt_count: %d</td></tr>\n",sp.s_mnt_count);
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_magic: %d</td></tr>\n",sp.s_magic);
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_inode_size: %d</td></tr>\n",sp.s_inode_size);
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_block_size: %d</td></tr>\n",sp.s_block_size);
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_first_ino: %d</td></tr>\n",sp.s_first_ino);
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_first_blo: %d</td></tr>\n",sp.s_first_blo);
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_bm_inode_start: %d</td></tr>\n",sp.s_bm_inode_start);
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_bm_block_start: %d</td></tr>\n",sp.s_bm_block_start);
+        fprintf(graph, "<tr><td  bgcolor='#E4DCCF'>sp_inode_start: %d</td></tr>\n",sp.s_inode_start);
+        fprintf(graph, "<tr><td  bgcolor='#F9F5EB'>sp_block_start: %d</td></tr>\n",sp.s_block_start);
 
         fprintf(graph, "</table>\n");
         fprintf(graph, ">];\n");
         fprintf(graph, "}\n");
     }
     fclose(graph);
+    // Si la carpeta no existe, la creamos
     string comando1 = "mkdir -p " + path.substr(0, path.find_last_of("/"));
     system(comando1.c_str());
-
-    string comando = "dot -Tpng " + filename + " -o " + path;
+    
+    // llamamos al comando dot
+    string comando = "dot -Tjpg " + filename + " -o " + path;
     system(comando.c_str());
         
 }
@@ -340,7 +340,6 @@ void REP::make_rep(REP* rep, ListaDobleMount* listaMount)
 {
     
     FILE* disco;
-    cout << "path: " << listaMount->buscar(rep->id)->path << endl;
     disco = fopen(listaMount->buscar(rep->id)->path.c_str(), "rb+");
     if(disco != NULL)
     {
@@ -350,18 +349,26 @@ void REP::make_rep(REP* rep, ListaDobleMount* listaMount)
         {
             if(rep->name == "mbr")
             {
-                cout << "MBR" << endl;
                 mbr_rep(mbr, rep->path, listaMount->buscar(rep->id)->path);
             }
             else if(rep->name == "disk")
             {
-                cout << "DISK" << endl;
                 rep_disk(mbr, rep->path, listaMount->buscar(rep->id)->path);
             }
             else if (rep->name == "sp")
             {
-                cout << "SUPERBLOQUE" << endl;
-                //rep_superbloque();
+                Partition particiones[4] = {mbr.mbr_partition_1, mbr.mbr_partition_2, mbr.mbr_partition_3, mbr.mbr_partition_4};
+                for (int i = 0; i < 4; i++)
+                {
+                    if (strcmp(particiones[i].part_name, listaMount->buscar(rep->id)->name) == 0)
+                    {
+                        fseek(disco, particiones[i].part_start, SEEK_SET);
+                        SuperBloque sp;
+                        fread(&sp, sizeof(SuperBloque), 1, disco);
+                        rep_superbloque(rep->path, listaMount->buscar(rep->id)->path, sp);
+                        break;
+                    }
+                }
             }
         }
         else

@@ -285,13 +285,13 @@ void analizar_rep(char *parametros){
         string valor = get_valor_parametro(tmpParam);
         //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
         if(tipo == "path"){
-            reporte->path = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
+            reporte->path = valor;
         } else if (tipo == "name"){
             reporte->name = valor;
         } else if (tipo == "id"){
             reporte->id = valor;
         } else if (tipo == "ruta"){
-            reporte->ruta = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
+            reporte->ruta = valor;
         } else {
             cout << "¡Error! rep solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
         }
@@ -329,7 +329,7 @@ void analizar_exec(char *parametros){
         if(tipo == "path"){
             // Verficamos que la extension sea .eea
             if (valor.find(".eea") != string::npos){
-            ejecutar->path = valor.erase(valor.find_last_not_of(" \t\r\n") + 1);
+            ejecutar->path = valor;
             } else {
                 cout << "¡Error! exec solo acepta archivos con extensión .eea" << endl;
                 return;

@@ -21,8 +21,16 @@ void Execute::ejecutar(Execute* ex)
     char linea[100];
     while (fgets(linea, 100, archivo) != NULL)
     {
-        // Eliminamos el salto de linea
-        linea[strlen(linea) - 1] = '\0';
+        // Eliminamos el salto de linea a menos que sea el ultimo caracter
+        if (linea[strlen(linea) - 1] == '\n')
+        {
+            linea[strlen(linea) - 1] = '\0';
+        }
+        // Si viene un comentario
+        if (linea[0] == '#')
+        {
+            continue;
+        }
         // Ejecutamos la linea
         Analizar(linea);
     }

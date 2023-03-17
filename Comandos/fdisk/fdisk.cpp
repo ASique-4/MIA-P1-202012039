@@ -97,7 +97,6 @@ Partition* buscarParticionLibre(MBR& mbr, int size) {
 
     for (int i = 0; i < 4; i++) {
         if (particiones[i]->part_name[0] == '\0' && particiones[i]->part_size == size) {
-            cout << "particion libre: " << i << endl;
             particionLibre = particiones[i];
             break;
         }
@@ -105,19 +104,16 @@ Partition* buscarParticionLibre(MBR& mbr, int size) {
     if (particionLibre == nullptr) {
         for (int i = 3; i >= 0; i--) {
             if (particiones[i]->part_size == -1 && particiones[i]->part_start == -1 && i == 0) {
-                cout << "particion libre: " << i << endl;
                 particionLibre = particiones[i];
                 break;
             }
             if (particiones[i]->part_size == -1 && particiones[i]->part_start == -1 
                 && (particiones[i - 1]->part_size + particiones[i - 1]->part_start) == (mbr.mbr_tamano - size) ) {
-                cout << "particion libre: " << i << endl;
                 particionLibre = particiones[i];
                 break;
             }
         }
     }
-    cout << "partición libre size: " << particionLibre->part_size << " start: " << particionLibre->part_start << endl;
     return particionLibre;
 }
 
@@ -142,7 +138,6 @@ Partition *buscarParticionExtendida(MBR &mbr)
             break;
         }
     }
-    cout << "partición extendida size: " << particionExtendida->part_size << " start: " << particionExtendida->part_start << endl;
     return particionExtendida;
 }
 
@@ -563,7 +558,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
                 int size = 0;
                 int end = mbr.mbr_tamano;
                 int lastEBR = start;
-                cout << "lastEBR Antes: " << lastEBR << endl;
                 while (lastEBR < end)
                 {
                     fseek(archivo, lastEBR, SEEK_SET);
@@ -575,7 +569,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
                     lastEBR += ebr.part_size;
                     size = ebr.part_size;
                 }
-                cout << "lastEBR Despues: " << lastEBR << endl;
                 
                 // Verificamos que no se repita el nombre 
                 if (existeEBRConMismoNombre(particion.part_name, archivo) || mbr.findPartition(particion.part_name) != nullptr)
@@ -587,8 +580,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
                 // Actualizamos el next del ebr anterior
                 if (lastEBR != start)
                 {
-                    cout << "Ultimo EBR: " << lastEBR << endl;
-                    cout << "Size: " << size << endl;
                     fseek(archivo, lastEBR - size, SEEK_SET);
                     fread(&ebr, sizeof(EBR), 1, archivo);
                     ebr.part_next = lastEBR;
@@ -603,7 +594,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
                 strcpy(ebr.part_name, particion.part_name);
                 ebr.part_next = -1;
                 // Guardar el ebr
-                cout << "Ultimo EBR: " << lastEBR << endl;
                 fseek(archivo, lastEBR, SEEK_SET);
                 fwrite(&ebr, sizeof(EBR), 1, archivo);
                 fclose(archivo);
@@ -741,12 +731,6 @@ void primer_ajuste(fdisk *particion_comando, Partition particion)
     {
         crearParticiones(particion, mbr, espacios_libres, tamano, first_fit_index, archivo);
     }
-
-    // Ordenamos las particiones    
-    mbr.OrdenarParticiones();
-
-    // Guardamos los cambios
-    guardarMBR(mbr, archivo);
 }
 
 // Función para crear una partición
@@ -1121,7 +1105,6 @@ void fdisk::make_fdisk(fdisk *partition_comando)
             new_particion.part_type = partition_comando->type;
             new_particion.part_status = '0';
             crear_particion(new_particion, partition_comando);
-            cout << "¡Partición creada con éxito! 2" << endl;
         }
         else
         {
@@ -1133,20 +1116,5 @@ void fdisk::make_fdisk(fdisk *partition_comando)
         cout << "¡Error! No se ha encontrado la partición." << endl;
         return;
     }
-    // Escribimos el mbr
-    FILE *archivo;
-    archivo = fopen(partition_comando->path.c_str(), "rb+");
-    MBR mbr;
-    fseek(archivo, 0, SEEK_SET);
-    fread(&mbr, sizeof(MBR), 1, archivo);
-    cout << "==========================" << endl;
-    cout << "mbr.mbr_tamano: " << mbr.mbr_tamano << endl;
-    cout << "name: " << partition_comando->name << endl;
-    cout << "size: " << partition_comando->size << endl;
-    cout << "unit: " << partition_comando->unit << endl;
-    cout << "path: " << partition_comando->path << endl;
-    cout << "type: " << partition_comando->type << endl;
-    cout << "==========================" << endl;
-    fclose(archivo);
 
 }

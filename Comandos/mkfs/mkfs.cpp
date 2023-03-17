@@ -24,12 +24,16 @@ BloqueDeCarpetas::BloqueDeCarpetas()
 {
 }
 
-void crearUsuariosTXT()
+void crearUsuariosTXT(string path)
 {
     FILE *archivo;
-    archivo = fopen("usuarios.txt", "w");
+    // Quitamos el nombre del disco
+    path = path.substr(0, path.find_last_of("/"));
+    path += "/usuarios.txt";
+    archivo = fopen(path.c_str(), "w");
     if (archivo == NULL)
     {
+        cout << "Path: " << path << endl;
         cout << "Error: No se pudo abrir el disco" << endl;
         return;
     }
@@ -63,7 +67,18 @@ void crearExt2(MKFS *mkfs, ListaDobleMount *listaMount)
     fseek(archivo, 0, SEEK_SET);
     Partition* particion;
     particion = mbr.findPartition(listaMount->buscar(mkfs->id)->name);
-    fclose(archivo);
+    // Buscamos el start
+    Partition particiones[4] = {mbr.mbr_partition_1, mbr.mbr_partition_2, mbr.mbr_partition_3, mbr.mbr_partition_4};
+    int start = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        if (particiones[i].part_status == '1' && strcmp(particiones[i].part_name, listaMount->buscar(mkfs->id)->name) == 0)
+        {
+            start = particiones[i].part_start;
+            break;
+        }
+    }
+    fseek(archivo, start, SEEK_SET);
     // Crear SuperBloque
     SuperBloque* sb = new SuperBloque();
     sb->s_filesystem_type = 2;
@@ -84,12 +99,7 @@ void crearExt2(MKFS *mkfs, ListaDobleMount *listaMount)
     sb->s_inode_start = sb->s_bm_block_start + sb->s_blocks_count;
     sb->s_block_start = sb->s_inode_start + sb->s_inodes_count * sizeof(Inodo);
 
-    archivo = fopen(listaMount->buscar(mkfs->id)->path.c_str(), "rb+");
-    if (archivo == NULL)
-    {
-        cout << "Error: No se pudo abrir el disco" << endl;
-        return;
-    }
+    fwrite(sb, sizeof(SuperBloque), 1, archivo);
 
     // BitMap de Inodos
     fseek(archivo, sb->s_bm_inode_start, SEEK_SET);
@@ -158,7 +168,7 @@ void crearExt2(MKFS *mkfs, ListaDobleMount *listaMount)
     fwrite(bloques, sizeof(BloqueDeCarpetas), sb->s_blocks_count, archivo);
 
     fclose(archivo);
-    crearUsuariosTXT();
+    crearUsuariosTXT(listaMount->buscar(mkfs->id)->path);
 }
 
 void crearExt3(MKFS* mkfs, ListaDobleMount* listaMount)
@@ -169,7 +179,7 @@ void crearExt3(MKFS* mkfs, ListaDobleMount* listaMount)
 
 void MKFS::make_mkfs(MKFS* mkfs, ListaDobleMount* listaMount)
 {
-    if (mkfs->fs == "2fs")
+    if (strcmp(mkfs->fs, "2fs") == 0)
     {
         crearExt2(mkfs, listaMount);
     }
