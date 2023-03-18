@@ -24,4 +24,10 @@ rep >id=390Disco2 >name=mbr >path=/home/user/Reportes/ReporteMBR2.jpg
 mkfs >id=390Disco1 >type=fast
 rep >id=390Disco1 >name=sp >path=/home/user/Reportes/ReporteSuperBloque.jpg
 login >user=root >pass=123 >id=390Disco1
-logout
+mkgrp >name=Grupo1
+mkgrp >name=Grupo2
+mkgrp >name=Grupo3
+mkgrp >name=Grupo4
+mkgrp >name=Grupo5
+mkgrp >name=Grupo6
+rmgrp >name=Grupo2

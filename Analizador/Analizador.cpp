@@ -11,6 +11,8 @@
 #include "../Comandos/execute/execute.h"
 #include "../Comandos/login/login.h"
 #include "../Comandos/logout/Logout.h"
+#include "../Comandos/mkgrp/mkgrp.h"
+#include "../Comandos/rmgrp/rmgrp.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -427,10 +429,87 @@ void analizar_login(char *parametros){
     userGlobal = login->make_login(login, listaMountGlobal);
 }
 
+/**
+ * Toma una cadena, y si es un comando de cierre de sesión, cierra la sesión del usuario
+ * 
+ * @param parametros Los parámetros del comando.
+ */
 void analizar_logout(char *parametros){
     // Cerramos la sesión
     Logout *logout = new Logout();
     logout->make_logout(userGlobal);
+}
+
+/**
+ * Toma una cadena, la divide en tokens y luego verifica si los tokens son parámetros válidos para el
+ * comando mkgrp. Si lo son, crea un nuevo objeto MKGRP y llama a la función ejecutarMKGRP
+ * 
+ * @param parametros Los parámetros que el usuario ingresó
+ * 
+ * @return Una cuerda
+ */
+void analizar_mkgrp(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    MKGRP *grupo = new MKGRP();
+    string name = "";
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "name"){
+            name = valor;
+        } else {
+            cout << "¡Error! mkgrp solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (name == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'mkgrp'" << endl;
+        return;
+    }
+    //Creamos la particion
+    grupo->ejecutarMKGRP(name, userGlobal->pathUsuarios, userGlobal->txtPos);
+}
+
+/**
+ * Toma una cadena, la divide en tokens y luego verifica si los tokens son parámetros válidos para el
+ * comando rmgrp. Si lo son, crea un nuevo objeto RMGRP y llama a la función ejecutarRMGRP
+ * 
+ * @param parametros Los parámetros que el usuario ingresó
+ * 
+ * @return Una cuerda
+ */
+void analizar_rmgrp(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    RMGRP *grupo = new RMGRP();
+    string name = "";
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "name"){
+            name = valor;
+        } else {
+            cout << "¡Error! rmgrp solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (name == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'rmgrp'" << endl;
+        return;
+    }
+    //Creamos la particion
+    grupo->ejecutarRMGRP(name, userGlobal->pathUsuarios, userGlobal->txtPos);
 }
 
 
@@ -472,6 +551,12 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "logout") == 0){
         cout << "logout" << endl;
         analizar_logout(token);
+    }else if(strcasecmp(token, "mkgrp") == 0){
+        cout << "mkgrp" << endl;
+        analizar_mkgrp(token);
+    }else if(strcasecmp(token, "rmgrp") == 0){
+        cout << "rmgrp" << endl;
+        analizar_rmgrp(token);
     }else if(strcasecmp(token, "exit") == 0){
         cout << "exit" << endl;
         exit(0);

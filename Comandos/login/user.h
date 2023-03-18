@@ -14,6 +14,8 @@ class User
         string grupo;
         string usuario;
         string password;
+        string pathUsuarios;
+        int txtPos;
 
     private:
 

@@ -15,6 +15,8 @@
 #include "./Comandos/execute/execute.cpp"
 #include "./Comandos/login/login.cpp"
 #include "./Comandos/logout/Logout.cpp"
+#include "./Comandos/mkgrp/mkgrp.cpp"
+#include "./Comandos/rmgrp/rmgrp.cpp"
 
 using namespace std;
 

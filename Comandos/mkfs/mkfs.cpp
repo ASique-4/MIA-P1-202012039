@@ -24,25 +24,7 @@ BloqueDeCarpetas::BloqueDeCarpetas()
 {
 }
 
-void crearUsuariosTXT(string path)
-{
-    FILE *archivo;
-    // Quitamos el nombre del disco
-    path = path.substr(0, path.find_last_of("/"));
-    path += "/usuarios.txt";
-    archivo = fopen(path.c_str(), "w");
-    if (archivo == NULL)
-    {
-        cout << "Path: " << path << endl;
-        cout << "Error: No se pudo abrir el disco" << endl;
-        return;
-    }
-    string linea = "1,G,root\n";
-    fwrite(linea.c_str(), sizeof(char), linea.length(), archivo);
-    linea = "1,U,root,root,123\n";
-    fwrite(linea.c_str(), sizeof(char), linea.length(), archivo);
-    fclose(archivo);
-}
+
 
 
 /**
@@ -167,8 +149,13 @@ void crearExt2(MKFS *mkfs, ListaDobleMount *listaMount)
     bloques[0].b_content[1].b_inodo = 0;
     fwrite(bloques, sizeof(BloqueDeCarpetas), sb->s_blocks_count, archivo);
 
+    // Creamos el archivo de usuarios dentro del sistema de archivos
+    fseek(archivo, sb->s_block_start + sizeof(BloqueDeCarpetas), SEEK_SET);
+    string contenido = "1,G,root\n1,U,root,root,123\n";
+    fwrite(contenido.c_str(), sizeof(char), contenido.length(), archivo);
+
     fclose(archivo);
-    crearUsuariosTXT(listaMount->buscar(mkfs->id)->path);
+    
 }
 
 void crearExt3(MKFS* mkfs, ListaDobleMount* listaMount)

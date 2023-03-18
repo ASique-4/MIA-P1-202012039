@@ -3,6 +3,8 @@
 #include <fstream>
 #include <string.h>
 #include <stdio.h>
+#include "../fdisk/partition.h"
+#include "../Estructuras/BloqueDeCarpetas.h"
 
 using namespace std;
 
@@ -18,68 +20,77 @@ User* Login::make_login(Login *login, ListaDobleMount *listaDobleMount)
 {
     
     FILE *archivo;
-    string pathCarpeta = listaDobleMount->buscar(login->id)->path;
-    
-    // Quitamos el archivo de la ruta
-    pathCarpeta = pathCarpeta.substr(0, pathCarpeta.find_last_of("/"));
-    // Verificar si existe el archivo de usuarios
-    string pathArchivo = pathCarpeta + "/usuarios.txt";
+    string pathArchivo = listaDobleMount->buscar(login->id)->path;
     archivo = fopen(pathArchivo.c_str(), "r");
     if (archivo == NULL)
     {
-        cout << "Path: " << pathArchivo << endl;
         cout << "Error: No se pudo abrir el archivo de usuarios" << endl;
         return nullptr;
     }
-    // Verificar si existe el usuario
-    User* user;
-    char linea[100];
-    while (fgets(linea, 100, archivo) != NULL)
+    // Vamos a la posicion del archivo donde se encuentran los usuarios
+    fseek(archivo, 0, SEEK_SET);
+    MBR mbr;
+    fread(&mbr, sizeof(MBR), 1, archivo);
+    Partition *particiones[4] = {&mbr.mbr_partition_1, &mbr.mbr_partition_2, &mbr.mbr_partition_3, &mbr.mbr_partition_4};
+    // Buscamos la particion que contiene el archivo de usuarios
+    Partition *particion = nullptr;
+    for (int i = 0; i < 4; i++)
     {
-        try
+        if (particiones[i]->part_status == '1' && strcmp(particiones[i]->part_name, listaDobleMount->buscar(login->id)->name) == 0)
         {
-            string lineaString = linea;
-            // id
-            user->id = lineaString.substr(0, lineaString.find_first_of(","));
-            // tipo 
-            lineaString = lineaString.substr(lineaString.find_first_of(",") + 1);
-            user->tipo = lineaString.substr(0, lineaString.find_first_of(","));
-            // grupo
-            lineaString = lineaString.substr(lineaString.find_first_of(",") + 1);
-            user->grupo = lineaString.substr(0, lineaString.find_first_of(","));
-
-            if (user->tipo == "U")
-            {    
-                // usuario
-                lineaString = lineaString.substr(lineaString.find_first_of(",") + 1);
-                user->usuario = lineaString.substr(0, lineaString.find_first_of(","));
-                // password
-                lineaString = lineaString.substr(lineaString.find_first_of(",") + 1);
-                user->password = lineaString.substr(0, lineaString.find_first_of(","));
-
-            }
-        } catch (const std::exception& e)
-        {
-            user = new User();
-            cout << "Error: Archivo de usuarios corrupto" << endl;
-            return nullptr;
-        }
-    
-        if (user->usuario == login->user)
-        {
-            if (password == login->password)
-            {
-                cout << "Login exitoso" << endl;
-                return user;
-            }
-            else
-            {
-                cout << "Error: Contraseña incorrecta" << endl;
-                return nullptr;
-            }
+            particion = particiones[i];
+            break;
         }
     }
-    cout << "Error: Usuario no encontrado" << endl;
+    // Abrimos el SuperBloque
+    SuperBloque *superBloque = new SuperBloque();
+    fseek(archivo, particion->part_start, SEEK_SET);
+    fread(superBloque, sizeof(SuperBloque), 1, archivo);
+    // Nos posicionamos en el inicio del archivo de usuarios
+    fseek(archivo,superBloque->s_block_start + sizeof(BloqueDeCarpetas), SEEK_SET);
+    // Leemos el archivo de usuarios
+    User* user;
+    char linea[100];
+    
+    while (fgets(linea, 100, archivo) != NULL)
+    {
+        user = new User();
+        user->txtPos = superBloque->s_block_start + sizeof(BloqueDeCarpetas);
+        user->pathUsuarios = pathArchivo;
+        
+        char *token = strtok(linea, ",");
+        user->id = token;
+        token = strtok(NULL, ",");
+        user->tipo = token;
+        try
+        {
+            token = strtok(NULL, ",");
+            user->grupo = token;
+        }catch(exception e)
+        {
+            token = strtok(NULL, "\n");
+            user->grupo = token;
+        }
+
+        if (user->tipo == "U")
+        {
+            token = strtok(NULL, ",");
+            user->usuario = token;
+            token = strtok(NULL, ",");
+            user->password = token;
+            // Eliminar el salto de linea
+            user->password = user->password.substr(0, user->password.size() - 1);
+            if (user->usuario == login->user && user->password == login->password)
+            {
+                cout << "Se ha iniciado sesion" << endl;
+                fclose(archivo);
+                return user;
+            }
+        }
+        
+    }
+    cout << "Error: Usuario o contraseña incorrectos" << endl;
+    fclose(archivo);
     return nullptr;
 
     
