@@ -606,6 +606,12 @@ void analizar_rmusr(char *parametros){
     usuario->ejecutar(userGlobal->pathUsuarios, userGlobal->txtPos, usuario);
 }
 
+void analizar_pause(char *parametros){
+    // Pedimos al usuario que presione enter para continuar
+    cout << "Presione enter para continuar" << endl;
+    cin.get();
+}
+
 /**
  * Toma una cadena, la divide en tokens y luego llama a la función apropiada para manejar el comando
  * 
@@ -656,6 +662,9 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "rmusr") == 0){
         cout << "rmusr" << endl;
         analizar_rmusr(token);
+    }else if(strcasecmp(token, "pause") == 0){
+        cout << "pause" << endl;
+        analizar_pause(token);
     }else if(strcasecmp(token, "exit") == 0){
         cout << "exit" << endl;
         exit(0);
