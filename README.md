@@ -95,3 +95,52 @@ Este comando permite iniciar sesión en el sistema de archivos del sistema opera
 login >user="mi usuario" >pass="mi pwd" >id=061Disco1
 ```
 
+## 8. LOGOUT
+Este comando permite cerrar sesión en el sistema de archivos del sistema operativo. El comando LOGOUT tiene la siguiente sintaxis:
+
+### Ejemplo
+```bash
+//Cierra sesión en el sistema de archivos del sistema operativo
+logout
+```
+
+## 9. MKGRP
+Este comando permite crear un grupo en el sistema de archivos del sistema operativo. El comando MKGRP tiene la siguiente sintaxis:
+
+### Ejemplo
+```bash
+//Crea un grupo en el sistema de archivos del sistema operativo
+mkgrp >name=usuarios
+```
+
+## 10. RMGRP
+Este comando permite eliminar un grupo en el sistema de archivos del sistema operativo. El comando RMGRP tiene la siguiente sintaxis:
+
+### Ejemplo
+```bash
+//Elimina un grupo en el sistema de archivos del sistema operativo
+rmgrp >name=usuarios
+```
+
+## 11. MKUSR
+Este comando permite crear un usuario en el sistema de archivos del sistema operativo. El comando MKUSR tiene la siguiente sintaxis:
+
+### Ejemplo
+```bash
+//Crea un usuario en el sistema de archivos del sistema operativo
+mkusr >name=usuario1 >pass=usuario1 >grp=usuarios
+```
+
+## 12. RMUSR
+Este comando permite eliminar un usuario en el sistema de archivos del sistema operativo. El comando RMUSR tiene la siguiente sintaxis:
+
+### Ejemplo
+```bash
+//Elimina un usuario en el sistema de archivos del sistema operativo
+rmusr >name=usuario1
+```
+
+
+
+
+

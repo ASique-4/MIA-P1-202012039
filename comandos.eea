@@ -31,3 +31,7 @@ mkgrp >name=Grupo4
 mkgrp >name=Grupo5
 mkgrp >name=Grupo6
 rmgrp >name=Grupo2
+rmgrp >name=Grupo4
+mkusr >user=Usuario1 >pass=123 >grp=Grupo1
+mkusr >user=Usuario2 >pass=123 >grp=Grupo1
+rmusr >user=Usuario2

@@ -13,6 +13,8 @@
 #include "../Comandos/logout/Logout.h"
 #include "../Comandos/mkgrp/mkgrp.h"
 #include "../Comandos/rmgrp/rmgrp.h"
+#include "../Comandos/mkusr/mkusr.h"
+#include "../Comandos/rmusr/rmusr.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -472,6 +474,11 @@ void analizar_mkgrp(char *parametros){
         cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'mkgrp'" << endl;
         return;
     }
+    // Verificamos que el usuario sea root
+    if (userGlobal->usuario != "root"){
+        cout << "¡Error! Solo el usuario root puede crear grupos" << endl;
+        return;
+    }
     //Creamos la particion
     grupo->ejecutarMKGRP(name, userGlobal->pathUsuarios, userGlobal->txtPos);
 }
@@ -508,10 +515,96 @@ void analizar_rmgrp(char *parametros){
         cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'rmgrp'" << endl;
         return;
     }
+    // Verificamos que el usuario sea root
+    if (userGlobal->usuario != "root"){
+        cout << "¡Error! Solo el usuario root puede eliminar grupos" << endl;
+        return;
+    }
     //Creamos la particion
     grupo->ejecutarRMGRP(name, userGlobal->pathUsuarios, userGlobal->txtPos);
 }
 
+/**
+ * Toma una cadena, la divide en tokens y luego verifica si los tokens son parámetros válidos para el
+ * comando mkusr. Si lo son, crea un nuevo objeto MKUSR y llama a la función ejecutarMKUSR
+ * 
+ * @param parametros Los parámetros que el usuario ingresó
+ * 
+ */
+void analizar_mkusr(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    Mkusr *usuario = new Mkusr();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "user"){
+            strcpy(usuario->user, valor.c_str());
+        } else if (tipo == "pass"){
+            strcpy(usuario->pass, valor.c_str());
+        } else if (tipo == "grp"){
+            strcpy(usuario->grp, valor.c_str());
+        } else {
+            cout << "¡Error! mkusr solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (usuario->user == "" || usuario->pass == "" || usuario->grp == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'mkusr'" << endl;
+        return;
+    }
+    // Verificamos que el usuario sea root
+    if (userGlobal->usuario != "root"){
+        cout << "¡Error! Solo el usuario root puede crear usuarios" << endl;
+        return;
+    }
+    //Creamos la particion
+    usuario->ejecutar(userGlobal->pathUsuarios, userGlobal->txtPos, usuario);
+}
+
+/**
+ * Toma una cadena, la divide en tokens y luego verifica si los tokens son parámetros válidos para el
+ * comando rmusr. Si lo son, crea un objeto Rmusr y llama a su función ejecutar
+ * 
+ * @param parametros Los parámetros que el usuario ingresó
+ * 
+ */
+void analizar_rmusr(char *parametros){
+    //Pasamos a la siguiente posicion
+    parametros = strtok(NULL, ">");
+    //Inicializamos nuestro disco
+    Rmusr *usuario = new Rmusr();
+    while(parametros != NULL){
+        //Obtenemos el tipo y el valor del parametro actual
+        string tmpParam = parametros;
+        string tipo = get_tipo_parametro(tmpParam);
+        string valor = get_valor_parametro(tmpParam);
+        //Verificamos cual parametro es para inicializar el objeto (los parametros ya vienen en lowercase)
+        if(tipo == "user"){
+            strcpy(usuario->user, valor.c_str());
+        } else {
+            cout << "¡Error! rmusr solo acepta parámetros válidos, ¿qué intentas hacer con '" << valor << "'?" << endl;
+        }
+        parametros = strtok(NULL, ">");
+    }
+    //Verificamos que los parametros obligatorios esten
+    if (usuario->user == ""){
+        cout << "¡Error! Parece que alguien olvidó poner los parámetros en 'rmusr'" << endl;
+        return;
+    }
+    // Verificamos que el usuario sea root
+    if (userGlobal->usuario != "root"){
+        cout << "¡Error! Solo el usuario root puede eliminar usuarios" << endl;
+        return;
+    }
+    //Creamos la particion
+    usuario->ejecutar(userGlobal->pathUsuarios, userGlobal->txtPos, usuario);
+}
 
 /**
  * Toma una cadena, la divide en tokens y luego llama a la función apropiada para manejar el comando
@@ -557,6 +650,12 @@ void Analizar(char* comando)
     }else if(strcasecmp(token, "rmgrp") == 0){
         cout << "rmgrp" << endl;
         analizar_rmgrp(token);
+    }else if(strcasecmp(token, "mkusr") == 0){
+        cout << "mkusr" << endl;
+        analizar_mkusr(token);
+    }else if(strcasecmp(token, "rmusr") == 0){
+        cout << "rmusr" << endl;
+        analizar_rmusr(token);
     }else if(strcasecmp(token, "exit") == 0){
         cout << "exit" << endl;
         exit(0);

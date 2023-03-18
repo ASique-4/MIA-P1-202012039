@@ -17,6 +17,8 @@
 #include "./Comandos/logout/Logout.cpp"
 #include "./Comandos/mkgrp/mkgrp.cpp"
 #include "./Comandos/rmgrp/rmgrp.cpp"
+#include "./Comandos/mkusr/mkusr.cpp"
+#include "./Comandos/rmusr/rmusr.cpp"
 
 using namespace std;
 
