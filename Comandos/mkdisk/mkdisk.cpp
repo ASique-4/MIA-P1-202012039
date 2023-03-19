@@ -20,18 +20,15 @@ void mkdisk::make_mkdisk(mkdisk *disco){
     string path = disco->path;
 
     //Verificamos si está entre comillas el path
-    if(path.at(0) == '\"'){
-        path = path.substr(0, path.find_last_of("/")) + "\"";
-        //Quitamos comillas
-        disco->path = disco->path.substr(1, disco->path.length() - 2);
-    }else{
-        path = path.substr(0, path.find_last_of("/"));
+    std::string comillas("\"");
+    if (path.length() >= 2 && path.substr(path.length() - 2) == comillas) {
+        disco->path = path.substr(0, path.length() - 2);
     }
 
 
     //Verificamos si el path existe y si no lo creamos
     if(access(path.c_str(), F_OK) == -1){
-        string comando = "mkdir -p " + path;
+        string comando = "mkdir -p " + disco->path.substr(0, path.find_last_of("/"));
         system(comando.c_str());
     }
     

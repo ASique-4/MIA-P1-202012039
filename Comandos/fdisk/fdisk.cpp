@@ -1021,9 +1021,9 @@ void fdisk::make_fdisk(fdisk *partition_comando)
 {
 
     // Si el path tiene comillas
-    if (partition_comando->path[0] == '\"')
-    {
-        partition_comando->path = partition_comando->path.substr(1, partition_comando->path.length() - 2);
+    std::string comillas("\"");
+    if (path.length() >= 2 && path.substr(path.length() - 2) == comillas) {
+        partition_comando->path = path.substr(0, path.length() - 2);
     }
 
     // Verificamos si el archivo existe

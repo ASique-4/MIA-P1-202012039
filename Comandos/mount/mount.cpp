@@ -90,7 +90,12 @@ string createID(MOUNT *disco)
 
 ListaDobleMount* MOUNT::make_mount(MOUNT *disco)
 {
-
+    
+    // Si el parh tiene comillas
+    std::string comillas("\"");
+    if (path.length() >= 2 && path.substr(path.length() - 2) == comillas) {
+        disco->path = path.substr(0, path.length() - 2);
+    }
     // Creamos el ID
     string id = createID(disco);
     // Si no se pudo crear el ID
