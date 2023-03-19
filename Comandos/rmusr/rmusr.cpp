@@ -51,16 +51,6 @@ void Rmusr::ejecutar(string path, int start, Rmusr *rmusr)
     }
 
 
-    // Pedimos confirmación al usuario antes de eliminar el grupo
-    cout << "¿Está seguro de que desea eliminar el usuario con id: " << usuario << "? (s/n)" << endl;
-    char respuesta;
-    cin >> respuesta;
-    if (respuesta != 's') {
-        cout << "Operación cancelada" << endl;
-        fclose(archivo);
-        return;
-    }
-
     // Reemplazamos el número del usuario 0,U,usuario,grupo,contraseña
     fseek(archivo, pos, SEEK_SET);
     char buffer2[256];

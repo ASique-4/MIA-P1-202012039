@@ -14,11 +14,7 @@ mkdisk::mkdisk(){}
 MBR::MBR(){}
 
 void mkdisk::make_mkdisk(mkdisk *disco){
-    //instrucciones del "mkdisk"
-    cout << "path: " << disco->path << endl;
-    cout << "size: " << disco->size << endl;
-    cout << "unit: " << disco->unit << endl;
-    cout << "fit: " << disco->fit << endl;
+    
     //Creamos el archivo
     FILE *archivo;
     string path = disco->path;

@@ -19,6 +19,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <cstdio>
 
 using namespace std;
 
@@ -608,8 +609,9 @@ void analizar_rmusr(char *parametros){
 
 void analizar_pause(char *parametros){
     // Pedimos al usuario que presione enter para continuar
-    cout << "Presione enter para continuar" << endl;
-    cin.get();
+    printf("Presione Enter para continuar...\n");
+    getchar();
+    getchar();
 }
 
 /**
@@ -621,52 +623,37 @@ void Analizar(char* comando)
 {
     char* token = strtok(comando, " ");
     if(strcasecmp(token, "mkdisk") == 0){
-        cout << "mkdisk" << endl;
         analizar_mkdisk(token);
     }else if(strcasecmp(token, "rmdisk") == 0){
-        cout << "rmdisk" << endl;
         analizar_rmdisk(token);
     }else if(strcasecmp(token, "fdisk") == 0){
-        cout << "fdisk" << endl;
         analizar_fdisk(token);
     }else if(strcasecmp(token, "mount") == 0){
-        cout << "mount" << endl;
         analizar_mount(token);
     }else if(strcasecmp(token, "unmount") == 0){
-        cout << "unmount" << endl;
         analizar_unmount(token);
     }else if(strcasecmp(token, "rep") == 0){
-        cout << "rep" << endl;
         analizar_rep(token);
     }else if(strcasecmp(token, "execute") == 0){
-        cout << "execute" << endl;
         analizar_exec(token);
     }else if(strcasecmp(token, "mkfs") == 0){
-        cout << "mkfs" << endl;
         analizar_mkfs(token);
     }else if(strcasecmp(token, "login") == 0){
-        cout << "login" << endl;
         analizar_login(token);
     }else if(strcasecmp(token, "logout") == 0){
-        cout << "logout" << endl;
         analizar_logout(token);
     }else if(strcasecmp(token, "mkgrp") == 0){
-        cout << "mkgrp" << endl;
         analizar_mkgrp(token);
     }else if(strcasecmp(token, "rmgrp") == 0){
-        cout << "rmgrp" << endl;
         analizar_rmgrp(token);
     }else if(strcasecmp(token, "mkusr") == 0){
-        cout << "mkusr" << endl;
         analizar_mkusr(token);
     }else if(strcasecmp(token, "rmusr") == 0){
-        cout << "rmusr" << endl;
         analizar_rmusr(token);
     }else if(strcasecmp(token, "pause") == 0){
-        cout << "pause" << endl;
         analizar_pause(token);
     }else if(strcasecmp(token, "exit") == 0){
-        cout << "exit" << endl;
+        cout << "¡Hasta luego!" << endl;
         exit(0);
     }else{
         cout << "¡Error! No puedo hacer eso, ¡soy un programa, no un mago!" << endl;

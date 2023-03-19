@@ -22,8 +22,10 @@ mount >path=/home/user/Disco2.dsk >name=Particion8
 rep >id=390Disco1 >name=mbr >path=/home/user/Reportes/ReporteMBR1.jpg
 rep >id=390Disco2 >name=mbr >path=/home/user/Reportes/ReporteMBR2.jpg
 mkfs >id=390Disco1 >type=fast
-rep >id=390Disco1 >name=sp >path=/home/user/Reportes/ReporteSuperBloque.jpg
+rep >id=390Disco1 >name=sp >path=/home/user/Reportes/ReporteSuperBloque.pdf
+rep >id=390Disco1 >name=disk >path=/home/user/Reportes/ReporteDisco.jpg
 login >user=root >pass=123 >id=390Disco1
+pause
 mkgrp >name=Grupo1
 mkgrp >name=Grupo2
 mkgrp >name=Grupo3

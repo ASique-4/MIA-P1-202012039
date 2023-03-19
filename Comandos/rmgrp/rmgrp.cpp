@@ -51,16 +51,6 @@ void RMGRP::ejecutarRMGRP(string id, string path, int start)
     }
 
 
-    // Pedimos confirmación al usuario antes de eliminar el grupo
-    cout << "¿Está seguro de que desea eliminar el grupo con id " << id << "? (s/n)" << endl;
-    char respuesta;
-    cin >> respuesta;
-    if (respuesta != 's') {
-        cout << "Operación cancelada" << endl;
-        fclose(archivo);
-        return;
-    }
-
     // Reemplazamos el número del grupo
     fseek(archivo, pos, SEEK_SET);
     string linea(buffer);

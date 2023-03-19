@@ -5,6 +5,7 @@
 #include <time.h>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 REP::REP()
 {
@@ -18,7 +19,6 @@ REP::REP()
  */
 void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
 {
-    cout << "MBR" << endl;
 
     string filename = pathDisco;
     size_t lastindex = filename.find_last_of(".");
@@ -28,6 +28,8 @@ void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
     graph = fopen(filename.c_str(), "w");
     if (graph != NULL)
     {
+        // string reporteEBR
+        string reporteEBR = "";
         fprintf(graph, "digraph G {\n");
         fprintf(graph, "parent [\n");
         fprintf(graph, "shape=plaintext\n");
@@ -56,6 +58,9 @@ void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
                     // recorremos las particiones lógicas
                     EBR ebr;
                     FILE* disco;
+                    // variable para reporte de ebr
+                    reporteEBR = "label=<<table border='1' cellborder='1'>\n";
+                    reporteEBR += "<tr><td colspan=\"3\" bgcolor='#867070'>REPORTE EBR</td></tr>\n";
                     disco = fopen(pathDisco.c_str(), "rb+");
                     if (disco != NULL)
                     {
@@ -74,6 +79,23 @@ void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
                                 fprintf(graph, "<tr><td port='s' bgcolor='#8BF5FA'>partition_s</td><td port='size' bgcolor='#8BF5FA'>%d</td></tr>\n", ebr.part_size);
                                 fprintf(graph, "<tr><td port='name' bgcolor='#F9F54B'>partition_name</td><td port='size' bgcolor='#F9F54B'>%s</td></tr>\n", ebr.part_name);
                                 fprintf(graph, "<tr><td port='next' bgcolor='#8BF5FA'>partition_next</td><td port='size' bgcolor='#8BF5FA'>%d</td></tr>\n", ebr.part_next);
+                                // reporte de ebr
+                                char buffer[1000]; // Definimos un buffer para almacenar el resultado de sprintf
+                                sprintf(buffer, "<tr><td colspan=\"3\" bgcolor='#D5B4B4'>PARTICIÓN LOGICA</td></tr>\n");
+                                reporteEBR += buffer;
+                                sprintf(buffer, "<tr><td port='status' bgcolor='#E4D0D0'>partition_status</td><td port='size' bgcolor='#E4D0D0'>%c</td></tr>\n", ebr.part_status);
+                                reporteEBR += buffer;
+                                sprintf(buffer, "<tr><td port='fit' bgcolor='#F5EBEB'>partition_fit</td><td port='size' bgcolor='#F5EBEB'>%c</td></tr>\n", ebr.part_fit);
+                                reporteEBR += buffer;
+                                sprintf(buffer, "<tr><td port='start' bgcolor='#E4D0D0'>partition_start</td><td port='size' bgcolor='#E4D0D0'>%d</td></tr>\n", ebr.part_start);
+                                reporteEBR += buffer;
+                                sprintf(buffer, "<tr><td port='s' bgcolor='#F5EBEB'>partition_s</td><td port='size' bgcolor='#F5EBEB'>%d</td></tr>\n", ebr.part_size);
+                                reporteEBR += buffer;
+                                sprintf(buffer, "<tr><td port='name' bgcolor='#E4D0D0'>partition_name</td><td port='size' bgcolor='#E4D0D0'>%s</td></tr>\n", ebr.part_name);
+                                reporteEBR += buffer;
+                                sprintf(buffer, "<tr><td port='next' bgcolor='#F5EBEB'>partition_next</td><td port='size' bgcolor='#F5EBEB'>%d</td></tr>\n", ebr.part_next);
+                                reporteEBR += buffer;
+
                             }
                             if (ebr.part_size == -1 || ebr.part_size == 0)
                             {
@@ -88,6 +110,16 @@ void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
         }
         fprintf(graph, "</table>>\n");
         fprintf(graph, "];\n");
+        // reporte de ebr
+        if (reporteEBR != "")
+        {
+            fprintf(graph, "parent2[\n");
+            fprintf(graph, "shape=plaintext\n");
+            fprintf(graph, "%s", reporteEBR.c_str());
+            fprintf(graph, "</table>>\n");
+            fprintf(graph, "];\n");
+
+        }
         fprintf(graph, "}\n");
         fclose(graph);
     } else
@@ -100,9 +132,21 @@ void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
     system(comando1.c_str());
     
     // llamamos al comando dot
-    cout << "dot -Tjpg " << filename << " -o " << pathgrafico << endl;
-    string comando = "dot -Tjpg " + filename + " -o " + pathgrafico;
+    cout << "Generando gráfico..." << endl;
+    string comando;
+    string extension = std::filesystem::path(pathgrafico).extension();
+    if (extension == ".jpg") {
+        comando = "dot -Tjpg " + filename + " -o " + pathgrafico;
+    } else if (extension == ".png") {
+        comando = "dot -Tpng " + filename + " -o " + pathgrafico;
+    } else if (extension == ".pdf") {
+        comando = "dot -Tpdf " + filename + " -o " + pathgrafico;
+    } else {
+        cout << "Error: formato de archivo no soportado." << endl;
+        return;
+    }
     system(comando.c_str());
+
 }
 
 /**
@@ -112,18 +156,40 @@ void mbr_rep(MBR mbr, string pathgrafico, string pathDisco)
  * 
  * @return El porcentaje de espacio libre en el disco.
  */
-int porcentajeEspacioLibre(MBR mbr)
+int porcentajeEspacioLibre(MBR mbr, string path)
 {
     int espacioLibre = 0;
     for (int i = 0; i < 4; i++)
     {
         if (mbr.getPartition(i).part_name[0] != '\0')
         {
-            espacioLibre += mbr.getPartition(i).part_size;
+            if (mbr.getPartition(i).part_type == 'E' || mbr.getPartition(i).part_type == 'e')
+            {
+                FILE *disco;
+                disco = fopen(path.c_str(), "rb+");
+                if (disco != NULL)
+                {
+                    EBR ebr;
+                    fseek(disco, mbr.getPartition(i).part_start, SEEK_SET);
+                    fread(&ebr, sizeof (EBR), 1, disco);
+                    while (ebr.part_next != -1)
+                    {
+                        espacioLibre += ebr.part_size;
+                        fseek(disco, ebr.part_next, SEEK_SET);
+                        fread(&ebr, sizeof (EBR), 1, disco);
+                    }
+                    espacioLibre += ebr.part_size;
+                    fclose(disco);
+                }
+            } else
+            {
+                espacioLibre += mbr.getPartition(i).part_size;
+            }
         }
     }
     return (mbr.mbr_tamano - espacioLibre) * 100 / mbr.mbr_tamano;
 }
+
 
 /**
  * Calcula el porcentaje de espacio ocupado en el disco
@@ -147,39 +213,12 @@ int porcentajeEspacioOcupado(MBR mbr,int espacioOcupado)
  * 
  * @return El porcentaje de espacio utilizado por la partición lógica.
  */
-int porcentajeLogica(MBR mbr, string name, string path)
+int porcentajeLogica(int espacioMBR, int espacioLogica)
 {
-    int espacioLogica = 0;
-    for (int i = 0; i < 4; i++)
-    {
-        if (mbr.getPartition(i).part_name[0] != '\0')
-        {
-            if (mbr.getPartition(i).part_type == 'E')
-            {
-                EBR ebr;
-                FILE* disco;
-                disco = fopen(path.c_str(), "rb+");
-                if (disco != NULL)
-                {
-                    int lastEBR = sizeof(MBR);
-                    while (true)
-                    {
-                        fseek(disco, lastEBR, SEEK_SET);
-                        fread(&ebr, sizeof(EBR), 1, disco);
-                        if (ebr.part_name != name)
-                        {
-                            espacioLogica = ebr.part_size;
-                            break;
-                        }
-                        lastEBR += sizeof(EBR);
-                    }
-                    fclose(disco);
-                }
-            }
-        }
-    }
-    return espacioLogica * 100 / mbr.mbr_tamano;
+    return espacioLogica * 100 / espacioMBR;
 }
+
+
 
 /**
  * Crea un archivo .dot, luego crea un archivo .png a partir del archivo .dot
@@ -190,7 +229,6 @@ int porcentajeLogica(MBR mbr, string name, string path)
  */
 void rep_disk(MBR mbr, string path, string pathDisco)
 {
-    cout << "mbr_tamano: " << mbr.mbr_tamano << endl;
     string filename = pathDisco;
     size_t lastindex = filename.find_last_of(".");
     filename = filename.substr(0, lastindex) + ".dot";
@@ -198,6 +236,9 @@ void rep_disk(MBR mbr, string path, string pathDisco)
     graph = fopen(filename.c_str(), "w");
     if (graph != NULL)
     {
+
+        std::string tmpEBR = "";
+        int rowspan = 0;
         string nombreArchivo = pathDisco;
         size_t lastindex = nombreArchivo.find_last_of(".");
         nombreArchivo = nombreArchivo.substr(0, lastindex);
@@ -213,7 +254,7 @@ void rep_disk(MBR mbr, string path, string pathDisco)
         fprintf(graph, "<table border='1' cellborder='1' >\n");
 
         fprintf(graph, "<tr><td rowspan=\"3\" bgcolor='#0E8388'>MBR</td>\n");
-        fprintf(graph, "<td rowspan=\"3\" bgcolor='#0E8388'>Espacio libre <br />%d%% del disco</td>\n",(porcentajeEspacioLibre(mbr)));
+        fprintf(graph, "<td rowspan=\"3\" bgcolor='#0E8388'>Espacio libre <br />%d%% del disco</td>\n",(porcentajeEspacioLibre(mbr,pathDisco)));
         for (int i = 0; i < 4; i++)
         {
             if (mbr.getPartition(i).part_name[0] != '\0')
@@ -223,8 +264,8 @@ void rep_disk(MBR mbr, string path, string pathDisco)
                     fprintf(graph, "<td rowspan=\"3\" bgcolor='#0E8388'>PRIMARIA<br />%d%% del disco</td>\n",(porcentajeEspacioOcupado(mbr,mbr.getPartition(i).part_size)));
                 } else if (mbr.getPartition(i).part_type == 'E')
                 {
-                    int rowspan = 0;
-                    std::string tmpEBR = "";
+                    rowspan = 0;
+                    tmpEBR = "";
 
                     EBR ebr;
                     FILE* disco;
@@ -240,7 +281,7 @@ void rep_disk(MBR mbr, string path, string pathDisco)
                             if (ebr.part_name[0] != '\0')
                             {
                                 tmpEBR += "<td rowspan=\"2\" bgcolor='#0E8388'>EBR</td>\n";
-                                tmpEBR += "<td rowspan=\"2\" bgcolor='#0E8388'>LÓGICO<br />" + std::to_string(porcentajeLogica(mbr,mbr.getPartition(i).part_name,pathDisco)) + "% de disco</td>\n";
+                                tmpEBR += "<td rowspan=\"2\" bgcolor='#0E8388'>LÓGICO<br />" + std::to_string(porcentajeLogica(mbr.mbr_tamano, ebr.part_size)) + "% de disco</td>\n";
 
                                 rowspan += 2;
                             }
@@ -248,20 +289,25 @@ void rep_disk(MBR mbr, string path, string pathDisco)
                             {
                                 break;
                             }
-                            lastEBR += sizeof(EBR);
+                            lastEBR = ebr.part_next;
                         }
                         fclose(disco);
                     }
-                    fputs("<td rowspan=\"1\" colspan=\"", graph);
-                    fprintf(graph, "%d", rowspan);
-                    fputs("\" bgcolor='#0E8388'>EXTENDIDA<br />", graph);
-                    fputs("</td>\n", graph);
-                    fprintf(graph, "</tr>\n");
-                    fprintf(graph, "<tr>\n");
-                    fputs(tmpEBR.c_str(), graph);
-
                 }
             }
+        }
+
+        if (tmpEBR != "")
+        {
+            
+            fputs("<td rowspan=\"1\" colspan=\"", graph);
+            fprintf(graph, "%d", rowspan);
+            fputs("\" bgcolor='#0E8388'>EXTENDIDA<br />", graph);
+            fputs("</td>\n", graph);
+            fprintf(graph, "</tr>\n");
+            fprintf(graph, "<tr>\n");
+            fputs(tmpEBR.c_str(), graph);
+
         }
 
         fprintf(graph, "</tr>\n");
@@ -274,7 +320,20 @@ void rep_disk(MBR mbr, string path, string pathDisco)
     string comando1 = "mkdir -p " + path.substr(0, path.find_last_of("/"));
     system(comando1.c_str());
 
-    string comando = "dot -Tpng " + filename + " -o " + path;
+    // llamamos al comando dot
+    cout << "Generando gráfico..." << endl;
+    string comando;
+    string extension = std::filesystem::path(path).extension();
+    if (extension == ".jpg") {
+        comando = "dot -Tjpg " + filename + " -o " + path;
+    } else if (extension == ".png") {
+        comando = "dot -Tpng " + filename + " -o " + path;
+    } else if (extension == ".pdf") {
+        comando = "dot -Tpdf " + filename + " -o " + path;
+    } else {
+        cout << "Error: formato de archivo no soportado." << endl;
+        return;
+    }
     system(comando.c_str());
 
 }
@@ -331,8 +390,21 @@ void rep_superbloque(string path, string pathDisco, SuperBloque sp)
     system(comando1.c_str());
     
     // llamamos al comando dot
-    string comando = "dot -Tjpg " + filename + " -o " + path;
+    cout << "Generando gráfico..." << endl;
+    string comando;
+    string extension = std::filesystem::path(path).extension();
+    if (extension == ".jpg") {
+        comando = "dot -Tjpg " + filename + " -o " + path;
+    } else if (extension == ".png") {
+        comando = "dot -Tpng " + filename + " -o " + path;
+    } else if (extension == ".pdf") {
+        comando = "dot -Tpdf " + filename + " -o " + path;
+    } else {
+        cout << "Error: formato de archivo no soportado." << endl;
+        return;
+    }
     system(comando.c_str());
+
         
 }
 

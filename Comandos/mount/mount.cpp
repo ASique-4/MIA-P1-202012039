@@ -90,8 +90,6 @@ string createID(MOUNT *disco)
 
 ListaDobleMount* MOUNT::make_mount(MOUNT *disco)
 {
-    cout << "Path: " << disco->path << endl;
-    cout << "Name: " << disco->name << endl;
 
     // Creamos el ID
     string id = createID(disco);

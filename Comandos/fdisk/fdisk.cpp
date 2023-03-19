@@ -446,8 +446,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
 {
     if (particion.part_type == 'P' || particion.part_type == 'p')
         {
-            cout << espacios_libres[best_fit_index].size << endl;
-            cout << espacios_libres[best_fit_index].start << endl;
             if (espacios_libres[best_fit_index].partition != nullptr)
             {
                 espacios_libres[best_fit_index].partition->part_size = tamano;
@@ -485,8 +483,6 @@ void crearParticiones(Partition particion, MBR mbr, vector<EspacioLibre> espacio
         } else if (particion.part_type == 'E' || particion.part_type == 'e')
         {
             // Para las particiones extendidas
-            cout << espacios_libres[best_fit_index].size << endl;
-            cout << espacios_libres[best_fit_index].start << endl;
             if (espacios_libres[best_fit_index].partition != nullptr)
             {
                 espacios_libres[best_fit_index].partition->part_size = tamano;
@@ -848,7 +844,6 @@ void crear_particion(Partition particion, fdisk *particion_comando)
         }
         else if (particion.part_fit == 'w' || particion.part_fit == 'W')
         {
-            cout << "Peor ajuste" << endl;
             peor_ajuste(particion_comando, particion);
         }
         else
@@ -1024,6 +1019,12 @@ void delete_partition(fdisk *partition)
  */
 void fdisk::make_fdisk(fdisk *partition_comando)
 {
+
+    // Si el path tiene comillas
+    if (partition_comando->path[0] == '\"')
+    {
+        partition_comando->path = partition_comando->path.substr(1, partition_comando->path.length() - 2);
+    }
 
     // Verificamos si el archivo existe
     try
